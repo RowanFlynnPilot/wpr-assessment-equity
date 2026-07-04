@@ -1,0 +1,117 @@
+"""IAAO ratio-study statistics. One responsibility: pure math on (assessed,
+price) pairs. No I/O, no config, no network — fully unit-testable.
+
+A "pair" everywhere below is (assessed_value, sale_price) — numbers. Assessed
+values may be floats (the pooled analysis normalizes them by municipality
+medians); the math is identical.
+"""
+
+import math
+import statistics
+from dataclasses import dataclass
+
+Pair = tuple[float, float]
+
+
+def ratio(assessed: float, price: float) -> float:
+    if price <= 0:
+        raise ValueError(f"sale price must be positive, got {price}")
+    return assessed / price
+
+
+def iqr_trim(pairs: list[Pair]) -> tuple[list[Pair], int]:
+    """IAAO outlier trimming: drop pairs whose ratio lies outside
+    [Q1 - 1.5*IQR, Q3 + 1.5*IQR]. Returns (kept, n_trimmed)."""
+    if len(pairs) < 4:
+        return pairs, 0
+    rs = sorted(ratio(a, p) for a, p in pairs)
+    q1, _, q3 = statistics.quantiles(rs, n=4)
+    lo, hi = q1 - 1.5 * (q3 - q1), q3 + 1.5 * (q3 - q1)
+    kept = [(a, p) for a, p in pairs if lo <= ratio(a, p) <= hi]
+    return kept, len(pairs) - len(kept)
+
+
+def median_ratio(pairs: list[Pair]) -> float:
+    return statistics.median(ratio(a, p) for a, p in pairs)
+
+
+def cod(pairs: list[Pair]) -> float:
+    """Coefficient of dispersion: 100 * mean|r - median| / median."""
+    med = median_ratio(pairs)
+    rs = [ratio(a, p) for a, p in pairs]
+    return 100.0 * (sum(abs(r - med) for r in rs) / len(rs)) / med
+
+
+def prd(pairs: list[Pair]) -> float:
+    """Price-related differential: mean ratio / sale-weighted mean ratio.
+    > 1.03 indicates regressivity (IAAO band 0.98-1.03)."""
+    rs = [ratio(a, p) for a, p in pairs]
+    weighted = sum(a for a, _ in pairs) / sum(p for _, p in pairs)
+    return statistics.fmean(rs) / weighted
+
+
+@dataclass(frozen=True)
+class PRB:
+    coefficient: float   # % change in ratio per doubling of value (as fraction)
+    std_error: float
+    t_stat: float
+    n: int
+
+    @property
+    def significant(self) -> bool:
+        """|t| >= 1.96 — conventional 95% two-tailed threshold."""
+        return abs(self.t_stat) >= 1.96
+
+
+def prb(pairs: list[Pair]) -> PRB:
+    """Price-related bias coefficient (IAAO). OLS of
+        y_i = (r_i - med) / med
+    on
+        x_i = log2(0.5 * price_i + 0.5 * assessed_i / med)
+    Slope reads as the fractional change in assessment ratio per doubling of
+    value. Significantly negative => regressive."""
+    if len(pairs) < 5:
+        raise ValueError(f"PRB needs >= 5 pairs, got {len(pairs)}")
+    med = median_ratio(pairs)
+    xs, ys = [], []
+    for a, p in pairs:
+        value_proxy = 0.5 * p + 0.5 * a / med
+        xs.append(math.log2(value_proxy))
+        ys.append((ratio(a, p) - med) / med)
+
+    n = len(xs)
+    x_bar, y_bar = statistics.fmean(xs), statistics.fmean(ys)
+    sxx = sum((x - x_bar) ** 2 for x in xs)
+    if sxx == 0:
+        raise ValueError("all sale values identical — PRB undefined")
+    b = sum((x - x_bar) * (y - y_bar) for x, y in zip(xs, ys)) / sxx
+    a0 = y_bar - b * x_bar
+    sse = sum((y - (a0 + b * x)) ** 2 for x, y in zip(xs, ys))
+    se = math.sqrt((sse / (n - 2)) / sxx)
+    return PRB(coefficient=b, std_error=se, t_stat=b / se if se else float("inf"), n=n)
+
+
+def decile_table(
+    pairs: list[Pair], norm: dict[str, float], munis: list[str],
+    n_deciles: int = 10,
+) -> list[dict]:
+    """Median NORMALIZED ratio by sale-price decile. Each pair's ratio is divided
+    by its municipality's median ratio (`norm`), so pooled deciles compare equity,
+    not revaluation timing. `munis` aligns 1:1 with `pairs`."""
+    rows = sorted(
+        (p, ratio(a, p) / norm[m]) for (a, p), m in zip(pairs, munis)
+    )
+    out = []
+    for d in range(n_deciles):
+        chunk = rows[d * len(rows) // n_deciles:(d + 1) * len(rows) // n_deciles]
+        if not chunk:
+            continue
+        out.append({
+            "decile": d + 1,
+            "n": len(chunk),
+            "price_min": chunk[0][0],
+            "price_max": chunk[-1][0],
+            "median_price": statistics.median(p for p, _ in chunk),
+            "median_norm_ratio": statistics.median(r for _, r in chunk),
+        })
+    return out
