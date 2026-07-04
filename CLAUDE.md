@@ -10,10 +10,12 @@ This is the standard vertical-equity method (IAAO ratio study statistics; the sa
 family of analysis behind the Chicago/Detroit/Philadelphia regressivity findings
 and the UChicago Center for Municipal Finance national study).
 
-**Analysis-first.** The deliverable of this repo is `output/findings-<year>.md` —
-a findings memo for the editor. There is NO frontend, widget, or published feed
-in this repo. A public-facing widget is a separate decision made only if the
-finding warrants one.
+**Analysis-first.** The primary deliverable is `output/findings-<year>.md` — a
+findings memo for the editor. `frontend/` presents the same findings as a
+WPR-branded widget (see Decisions log); it reads ONLY the aggregate
+`output/findings.json` the study writes. Whether the widget is ever published
+or embedded remains a separate editorial decision — there is no deploy
+workflow in this repo.
 
 ## Decisions log
 
@@ -21,6 +23,11 @@ finding warrants one.
   2026-07-04. The purpose of the 2025 run is to validate the method so the 2026
   study runs on rails.
 - **Analysis first, widget maybe.** Confirmed by Rowan 2026-07-04.
+- **Findings widget greenlit.** Rowan 2026-07-04 (same day, after the 2024
+  findings landed): build `frontend/` in the WPR brand system (Oswald /
+  Merriweather / typewriter roundel, matching wausaupilotandreview.com and the
+  restyled transactions widget). Publishing/embedding still needs editorial
+  sign-off; the widget consumes `output/findings.json` (aggregate-only).
 - **This repo reuses the RETR scraper from `wpr-property-transactions`** (sibling
   checkout) for browser automation only. It does NOT fork the Playwright logic.
 
@@ -165,5 +172,10 @@ only during backfill.
   TAP_RESULT_CAP (if a month ever reaches the cap, the window must shrink —
   a design change, not a retry).
 - Parcel fetch (idempotent, ~42 REST pages): `python -m analysis.parcels`
-- Study: `python -m analysis.study` → `output/findings-2025.md`
+- Study: `python -m analysis.study` → `output/findings-<year>.md` (editor memo)
+  + `output/findings.json` (widget feed; both rendered from one computed dict)
 - Tests: `python -m pytest tests/ -q` (pure-function tests; no network)
+- Widget: `cd frontend ; npm install ; npm run dev` (Vite serves at
+  `/wpr-assessment-equity/`; `vite.config.js` publicDir points at `output/` so
+  the feed is served without a copy step). `npm run build` → `frontend/dist/`
+  (gitignored; no deploy workflow — publishing is an editorial decision).

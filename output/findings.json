@@ -1,0 +1,247 @@
+{
+ "generated": "2026-07-04",
+ "county": "Marathon",
+ "study_year": 2024,
+ "min_sale_price": 10000,
+ "reference": {
+  "cod_max_sfr": 15.0,
+  "prd_band": [
+   0.98,
+   1.03
+  ],
+  "prb_band": [
+   -0.05,
+   0.05
+  ],
+  "muni_min_n": 30
+ },
+ "sample": {
+  "waterfall": [
+   {
+    "step": "raw RETR rows",
+    "remaining": 4959
+   },
+   {
+    "step": "conveyance is Sale",
+    "remaining": 2643
+   },
+   {
+    "step": "arm's length (no grantor/grantee relationship)",
+    "remaining": 2479
+   },
+   {
+    "step": "no fee exemption claimed",
+    "remaining": 2379
+   },
+   {
+    "step": "entire parcel transferred",
+    "remaining": 2291
+   },
+   {
+    "step": "single family use",
+    "remaining": 1891
+   },
+   {
+    "step": "sale price >= $10,000",
+    "remaining": 1874
+   },
+   {
+    "step": "recorded in 2024",
+    "remaining": 1874
+   }
+  ],
+  "exclusions": [
+   {
+    "step": "no parcel match",
+    "excluded": 32
+   },
+   {
+    "step": "parcel not pure class 1",
+    "excluded": 243
+   },
+   {
+    "step": "acreage mismatch (multi-parcel fingerprint)",
+    "excluded": 18
+   },
+   {
+    "step": "IQR ratio trimming (within municipality)",
+    "excluded": 172
+   }
+  ],
+  "final_n": 1409
+ },
+ "municipalities": [
+  {
+   "name": "CITY OF WAUSAU",
+   "n": 504,
+   "median_ratio": 0.932,
+   "cod": 11.0,
+   "prd": 1.0,
+   "prb": 0.002,
+   "prb_t": 0.3,
+   "reading": "within IAAO equity bands"
+  },
+  {
+   "name": "VILLAGE OF WESTON",
+   "n": 153,
+   "median_ratio": 0.889,
+   "cod": 9.8,
+   "prd": 1.005,
+   "prb": 0.023,
+   "prb_t": 1.2,
+   "reading": "within IAAO equity bands"
+  },
+  {
+   "name": "VILLAGE OF RIB MOUNTAIN",
+   "n": 93,
+   "median_ratio": 0.618,
+   "cod": 13.9,
+   "prd": 1.02,
+   "prb": -0.03,
+   "prb_t": -1.3,
+   "reading": "within IAAO equity bands"
+  },
+  {
+   "name": "VILLAGE OF KRONENWETTER",
+   "n": 82,
+   "median_ratio": 0.682,
+   "cod": 11.6,
+   "prd": 1.01,
+   "prb": -0.009,
+   "prb_t": -0.3,
+   "reading": "within IAAO equity bands"
+  },
+  {
+   "name": "VILLAGE OF ROTHSCHILD",
+   "n": 80,
+   "median_ratio": 0.885,
+   "cod": 11.4,
+   "prd": 1.012,
+   "prb": 0.023,
+   "prb_t": 0.8,
+   "reading": "within IAAO equity bands"
+  },
+  {
+   "name": "CITY OF MOSINEE",
+   "n": 50,
+   "median_ratio": 0.703,
+   "cod": 16.0,
+   "prd": 1.032,
+   "prb": -0.048,
+   "prb_t": -1.1,
+   "reading": "REGRESSIVE \u2014 lower-priced homes carry proportionally higher assessments"
+  },
+  {
+   "name": "VILLAGE OF SPENCER",
+   "n": 37,
+   "median_ratio": 0.762,
+   "cod": 9.7,
+   "prd": 1.009,
+   "prb": 0.006,
+   "prb_t": 0.2,
+   "reading": "within IAAO equity bands"
+  },
+  {
+   "name": "CITY OF SCHOFIELD",
+   "n": 30,
+   "median_ratio": 0.889,
+   "cod": 12.0,
+   "prd": 0.984,
+   "prb": 0.056,
+   "prb_t": 1.8,
+   "reading": "within IAAO equity bands"
+  }
+ ],
+ "pooled": {
+  "n": 1409,
+  "cod": 13.6,
+  "prd": 1.015,
+  "prb": -0.011,
+  "prb_se": 0.007,
+  "prb_t": -1.6,
+  "reading": "within IAAO equity bands"
+ },
+ "deciles": [
+  {
+   "decile": 1,
+   "n": 140,
+   "price_min": 10000,
+   "price_max": 110000,
+   "median_price": 70000,
+   "median_norm_ratio": 1.08
+  },
+  {
+   "decile": 2,
+   "n": 141,
+   "price_min": 110000,
+   "price_max": 150000,
+   "median_price": 131000,
+   "median_norm_ratio": 1.012
+  },
+  {
+   "decile": 3,
+   "n": 141,
+   "price_min": 150000,
+   "price_max": 177000,
+   "median_price": 164000,
+   "median_norm_ratio": 0.998
+  },
+  {
+   "decile": 4,
+   "n": 141,
+   "price_min": 177500,
+   "price_max": 205000,
+   "median_price": 190000,
+   "median_norm_ratio": 0.995
+  },
+  {
+   "decile": 5,
+   "n": 141,
+   "price_min": 205000,
+   "price_max": 234500,
+   "median_price": 220000,
+   "median_norm_ratio": 0.987
+  },
+  {
+   "decile": 6,
+   "n": 141,
+   "price_min": 234900,
+   "price_max": 262000,
+   "median_price": 248000,
+   "median_norm_ratio": 0.99
+  },
+  {
+   "decile": 7,
+   "n": 141,
+   "price_min": 262500,
+   "price_max": 299900,
+   "median_price": 276000,
+   "median_norm_ratio": 0.986
+  },
+  {
+   "decile": 8,
+   "n": 141,
+   "price_min": 299900,
+   "price_max": 340000,
+   "median_price": 315000,
+   "median_norm_ratio": 1.005
+  },
+  {
+   "decile": 9,
+   "n": 141,
+   "price_min": 340000,
+   "price_max": 425000,
+   "median_price": 375000,
+   "median_norm_ratio": 1.006
+  },
+  {
+   "decile": 10,
+   "n": 141,
+   "price_min": 426000,
+   "price_max": 1200000,
+   "median_price": 525000,
+   "median_norm_ratio": 1.004
+  }
+ ],
+ "bottom_vs_top_pct": 7.6
+}

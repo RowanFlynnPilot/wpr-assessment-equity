@@ -31,6 +31,8 @@ RETR_RAW_CSV = RAW_DIR / f"retr_{STUDY_YEAR}.csv"    # names/addresses/parcels
 PARCEL_CSV = RAW_DIR / f"parcels_{COUNTY.lower()}_{STUDY_YEAR}.csv"
 OUTPUT_DIR = REPO_ROOT / "output"                    # aggregate-only, committable
 FINDINGS_MD = OUTPUT_DIR / f"findings-{STUDY_YEAR}.md"
+FINDINGS_JSON = OUTPUT_DIR / "findings.json"         # latest study; the widget feed
+                                                     # (year is a field inside)
 
 # ---- Filter waterfall parameters ------------------------------------------------
 MIN_SALE_PRICE = 10_000     # ratio-study floor (NOT the $1,000 editorial floor)

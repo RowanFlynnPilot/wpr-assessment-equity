@@ -1,0 +1,371 @@
+/* WPR Assessment Equity — the paper's white/teal system (Oswald heads,
+   Merriweather prose), same tokens and class conventions as the
+   wpr-property-transactions widget. Tokens live in tokens.css. */
+
+* {
+  box-sizing: border-box;
+}
+
+.page {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 2rem 1.25rem 4rem;
+}
+
+/* --- WPR shared masthead (same as the transactions widget) ---------------- */
+.wpr-masthead {
+  border-top: 4px solid var(--wpr-slate);
+  border-bottom: 1px solid var(--wpr-slate);
+  padding: 16px 20px 12px;
+  text-align: center;
+  background: #ffffff;
+}
+.wpr-logo-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7rem;
+  max-width: 100%;
+}
+.wpr-mark {
+  height: 52px;
+  width: auto;
+  flex: none;
+}
+.wpr-logo {
+  max-height: 56px;
+  height: auto;
+  width: auto;
+  min-width: 0;
+  object-fit: contain;
+}
+.wpr-tagline {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--wpr-slate);
+  margin-top: 8px;
+}
+.wpr-dateline {
+  font-family: var(--font-ui);
+  font-size: 10.5px;
+  letter-spacing: 0.04em;
+  color: #6b6b6b;
+  margin: 6px auto 0;
+  max-width: 880px;
+  padding-top: 8px;
+  border-top: 1px solid var(--wpr-rule);
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.wpr-place {
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+/* --- Feature title --------------------------------------------------------- */
+.masthead {
+  border-bottom: 3px double var(--wpr-ink);
+  padding-bottom: 1rem;
+  margin-bottom: 1.5rem;
+}
+.masthead h1 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(2rem, 5vw, 3rem);
+  color: var(--wpr-ink);
+  margin: 0 0 0.35rem;
+}
+.dek {
+  margin: 0;
+  max-width: 68ch;
+  color: #444;
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+h2 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--wpr-ink);
+  border-bottom: 2px solid var(--wpr-slate);
+  padding-bottom: 0.3rem;
+  margin: 2.5rem 0 1rem;
+}
+
+/* --- Overall reading banner ------------------------------------------------ */
+.reading {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin: 1.5rem 0;
+  padding: 1rem 1.1rem;
+  background: var(--wpr-tint);
+  border-left: 4px solid var(--wpr-teal);
+}
+.reading-badge {
+  font-family: var(--font-ui);
+  font-weight: 700;
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  padding: 0.3rem 0.65rem;
+  color: #fff;
+  background: var(--wpr-teal);
+}
+.reading-badge.flag {
+  background: var(--wpr-down);
+}
+.reading-badge.sm {
+  font-size: 0.62rem;
+  padding: 0.14rem 0.45rem;
+  letter-spacing: 0.05em;
+}
+.reading-badge.sm.ok {
+  background: #e3f0ed;
+  color: #2f6f66;
+}
+.reading-badge.sm.flag {
+  background: #f7e3dd;
+  color: var(--wpr-down);
+}
+.reading-text {
+  flex: 1 1 34ch;
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.6;
+}
+
+/* --- KPI cards --------------------------------------------------------------- */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+}
+.kpi-card {
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  border: 1px solid var(--wpr-rule);
+  border-top: 3px solid var(--wpr-teal);
+  box-shadow: var(--shadow);
+  padding: 1rem 1.1rem 0.9rem;
+}
+.kpi-label {
+  font-family: var(--font-ui);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: #777;
+}
+.kpi-value {
+  font-family: var(--font-data);
+  font-weight: 600;
+  font-size: clamp(1.45rem, 3.4vw, 1.8rem);
+  line-height: 1.1;
+  color: var(--wpr-teal);
+  margin-top: 0.3rem;
+}
+.kpi-sub {
+  font-family: var(--font-ui);
+  font-size: 0.74rem;
+  color: #888;
+  margin-top: 0.35rem;
+}
+
+/* --- Charts -------------------------------------------------------------------- */
+.chart {
+  margin: 0;
+  background: #fff;
+  border: 1px solid var(--wpr-rule);
+  box-shadow: var(--shadow);
+  padding: 1rem 0.75rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+}
+.chart-solo .chart-body {
+  /* Explicit height: ResponsiveContainer needs a definite ancestor height, and
+     this page's one chart has no grid sibling to match heights with. */
+  height: 320px;
+  flex: none;
+}
+.chart figcaption {
+  font-family: var(--font-ui);
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--wpr-ink);
+  margin: 0 0 0.5rem 0.25rem;
+}
+.chart-body {
+  flex: 1;
+  min-height: 0;
+}
+.chart-hint {
+  font-weight: 400;
+  font-size: 0.75rem;
+  color: #999;
+}
+.chart-tip {
+  font-family: var(--font-ui);
+  background: #fff;
+  border: 1px solid var(--wpr-rule);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  padding: 0.5rem 0.65rem;
+  font-size: 0.82rem;
+}
+.chart-tip-title {
+  font-weight: 700;
+  color: var(--wpr-ink);
+  margin-bottom: 0.25rem;
+}
+.chart-tip-row {
+  display: flex;
+  gap: 1.25rem;
+  color: #444;
+}
+.chart-tip-row b {
+  font-family: var(--font-data);
+  margin-left: auto;
+  color: var(--wpr-ink);
+}
+.chart-tip-sub {
+  font-size: 0.76rem;
+  color: #777;
+  margin-top: 0.2rem;
+  max-width: 30ch;
+}
+.decile-gap {
+  font-size: 0.92rem;
+  max-width: 70ch;
+  line-height: 1.6;
+}
+.decile-gap b {
+  font-family: var(--font-data);
+}
+
+/* --- Tables ---------------------------------------------------------------------- */
+.section-hint {
+  font-size: 0.9rem;
+  color: #555;
+  max-width: 75ch;
+  line-height: 1.6;
+  margin: -0.25rem 0 1rem;
+}
+.table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--wpr-rule);
+  background: #fff;
+}
+.muni-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+.muni-table th {
+  font-family: var(--font-ui);
+  text-align: left;
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #666;
+  border-bottom: 2px solid var(--wpr-ink);
+  padding: 0.45rem 0.6rem;
+  white-space: nowrap;
+  background: var(--wpr-tint);
+}
+.muni-table td {
+  padding: 0.4rem 0.6rem;
+  border-bottom: 1px solid var(--wpr-rule);
+}
+.muni-table .num {
+  text-align: right;
+}
+.muni-table .mono {
+  font-family: var(--font-data);
+}
+.muni-table tbody tr:hover td {
+  background: #e9f3f1;
+}
+.muni-table .excl td {
+  color: #886;
+}
+.muni-table .total td {
+  font-weight: 700;
+  border-top: 2px solid var(--wpr-ink);
+}
+
+/* --- Sample details ------------------------------------------------------------ */
+.sample details > summary {
+  list-style: none;
+  cursor: pointer;
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.sample summary::-webkit-details-marker {
+  display: none;
+}
+.sample summary h2 {
+  display: inline-block;
+  margin-bottom: 0.75rem;
+}
+.sample summary h2::after {
+  content: " ▸";
+  color: var(--wpr-teal);
+}
+.sample details[open] summary h2::after {
+  content: " ▾";
+}
+.sample-n {
+  font-family: var(--font-ui);
+  font-size: 0.8rem;
+  color: #777;
+}
+
+/* --- States / footer -------------------------------------------------------------- */
+.empty {
+  padding: 2rem;
+  text-align: center;
+  color: #777;
+}
+.colophon {
+  margin-top: 2.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--wpr-rule);
+  font-size: 0.8rem;
+  color: #777;
+  max-width: 78ch;
+  line-height: 1.6;
+}
+
+/* --- Responsive --------------------------------------------------------------------- */
+@media (max-width: 880px) {
+  .kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (max-width: 480px) {
+  .kpi-grid {
+    grid-template-columns: 1fr;
+  }
+  .wpr-masthead {
+    padding: 12px 14px 10px;
+  }
+  .wpr-mark {
+    height: 36px;
+  }
+  .wpr-logo {
+    max-height: 38px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}

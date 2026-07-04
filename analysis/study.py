@@ -1,11 +1,14 @@
-"""Orchestration. One responsibility: run the study and write the findings memo.
+"""Orchestration. One responsibility: run the study and write the findings.
 
-    python -m analysis.study      -> output/findings-<year>.md
+    python -m analysis.study      -> output/findings-<year>.md  (editor memo)
+                                     output/findings.json       (widget feed)
 
-Everything written here is AGGREGATE-ONLY: statistics by municipality and
-price decile. No names, addresses, or parcel numbers.
+Both artifacts are rendered from ONE computed findings dict, so they can never
+disagree. Everything written here is AGGREGATE-ONLY: statistics by municipality
+and price decile. No names, addresses, or parcel numbers.
 """
 
+import json
 import statistics
 from collections import defaultdict
 from datetime import date
@@ -36,7 +39,9 @@ def _verdict(prd_v: float, prb_v: ratios.PRB) -> str:
     return "within IAAO equity bands"
 
 
-def run() -> None:
+def compute() -> dict:
+    """Run the pipeline and return the findings as one aggregate-only dict —
+    the single source both renderers read."""
     sales, waterfall = load_study_population(config.RETR_RAW_CSV)
     index = parcels.load()
     matches, join_excl = join(sales, index)
@@ -63,88 +68,151 @@ def run() -> None:
     norm_pooled = [(a / muni_median[m], p)
                    for (a, p), m in zip(pooled_pairs, pooled_munis)]
 
-    lines: list[str] = []
-    w = lines.append
-    w(f"# Assessment equity in {config.COUNTY} County — {config.STUDY_YEAR} sales ratio study")
-    w("")
-    w(f"*Generated {date.today().isoformat()} by `wpr-assessment-equity`. "
-      f"Aggregate statistics only — see CLAUDE.md for methodology and privacy policy.*")
-    w("")
-    w("## Sample construction")
-    w("")
-    w("| Filter step | remaining |")
-    w("|---|---|")
-    for name, n in waterfall:
-        w(f"| {name} | {n:,} |")
-    for name, n in join_excl.items():
-        w(f"| excluded: {name} | −{n:,} |")
-    w(f"| excluded: IQR ratio trimming (within municipality) | −{n_trimmed_total:,} |")
-    w(f"| **final study sample** | **{sum(len(v) for v in trimmed.values()):,}** |")
-    w("")
-
-    w("## Municipality-level statistics (IAAO)")
-    w("")
-    w(f"Municipalities with fewer than {config.MUNI_MIN_N} trimmed sales are pooled "
-      f"but not reported standalone. COD reference for single-family residential: "
-      f"<= {config.IAAO_COD_MAX_SFR:.0f}. PRD band {config.IAAO_PRD_BAND[0]}–"
-      f"{config.IAAO_PRD_BAND[1]}. PRB band ±0.05.")
-    w("")
-    w("| Municipality | n | median ratio | COD | PRD | PRB (t) | reading |")
-    w("|---|---|---|---|---|---|---|")
+    muni_rows = []
     for muni in sorted(trimmed, key=lambda m: -len(trimmed[m])):
         pairs = trimmed[muni]
         if len(pairs) < config.MUNI_MIN_N:
             continue
         p_v = ratios.prd(pairs)
         b_v = ratios.prb(pairs)
-        w(f"| {muni} | {len(pairs)} | {ratios.median_ratio(pairs):.3f} "
-          f"| {ratios.cod(pairs):.1f} | {p_v:.3f} "
-          f"| {b_v.coefficient:+.3f} ({b_v.t_stat:.1f}) | {_verdict(p_v, b_v)} |")
+        muni_rows.append({
+            "name": muni,
+            "n": len(pairs),
+            "median_ratio": round(ratios.median_ratio(pairs), 3),
+            "cod": round(ratios.cod(pairs), 1),
+            "prd": round(p_v, 3),
+            "prb": round(b_v.coefficient, 3),
+            "prb_t": round(b_v.t_stat, 1),
+            "reading": _verdict(p_v, b_v),
+        })
+
+    prd_v = ratios.prd(norm_pooled)
+    prb_v = ratios.prb(norm_pooled)
+    deciles = [
+        {**row,
+         "median_price": int(row["median_price"]),
+         "median_norm_ratio": round(row["median_norm_ratio"], 3)}
+        for row in ratios.decile_table(pooled_pairs, muni_median, pooled_munis,
+                                       config.N_DECILES)
+    ]
+    gap = ((deciles[0]["median_norm_ratio"] / deciles[-1]["median_norm_ratio"] - 1) * 100
+           if deciles else None)
+
+    return {
+        "generated": date.today().isoformat(),
+        "county": config.COUNTY,
+        "study_year": config.STUDY_YEAR,
+        "min_sale_price": config.MIN_SALE_PRICE,
+        "reference": {
+            "cod_max_sfr": config.IAAO_COD_MAX_SFR,
+            "prd_band": list(config.IAAO_PRD_BAND),
+            "prb_band": list(config.IAAO_PRB_BAND),
+            "muni_min_n": config.MUNI_MIN_N,
+        },
+        "sample": {
+            "waterfall": [{"step": name, "remaining": n} for name, n in waterfall],
+            "exclusions": (
+                [{"step": name, "excluded": n} for name, n in join_excl.items()]
+                + [{"step": "IQR ratio trimming (within municipality)",
+                    "excluded": n_trimmed_total}]
+            ),
+            "final_n": sum(len(v) for v in trimmed.values()),
+        },
+        "municipalities": muni_rows,
+        "pooled": {
+            "n": len(norm_pooled),
+            "cod": round(ratios.cod(norm_pooled), 1),
+            "prd": round(prd_v, 3),
+            "prb": round(prb_v.coefficient, 3),
+            "prb_se": round(prb_v.std_error, 3),
+            "prb_t": round(prb_v.t_stat, 1),
+            "reading": _verdict(prd_v, prb_v),
+        },
+        "deciles": deciles,
+        "bottom_vs_top_pct": round(gap, 1) if gap is not None else None,
+    }
+
+
+def render_md(f: dict) -> str:
+    lines: list[str] = []
+    w = lines.append
+    w(f"# Assessment equity in {f['county']} County — {f['study_year']} sales ratio study")
+    w("")
+    w(f"*Generated {f['generated']} by `wpr-assessment-equity`. "
+      f"Aggregate statistics only — see CLAUDE.md for methodology and privacy policy.*")
+    w("")
+    w("## Sample construction")
+    w("")
+    w("| Filter step | remaining |")
+    w("|---|---|")
+    for row in f["sample"]["waterfall"]:
+        w(f"| {row['step']} | {row['remaining']:,} |")
+    for row in f["sample"]["exclusions"]:
+        w(f"| excluded: {row['step']} | −{row['excluded']:,} |")
+    w(f"| **final study sample** | **{f['sample']['final_n']:,}** |")
     w("")
 
+    ref = f["reference"]
+    w("## Municipality-level statistics (IAAO)")
+    w("")
+    w(f"Municipalities with fewer than {ref['muni_min_n']} trimmed sales are pooled "
+      f"but not reported standalone. COD reference for single-family residential: "
+      f"<= {ref['cod_max_sfr']:.0f}. PRD band {ref['prd_band'][0]}–"
+      f"{ref['prd_band'][1]}. PRB band ±0.05.")
+    w("")
+    w("| Municipality | n | median ratio | COD | PRD | PRB (t) | reading |")
+    w("|---|---|---|---|---|---|---|")
+    for m in f["municipalities"]:
+        w(f"| {m['name']} | {m['n']} | {m['median_ratio']:.3f} "
+          f"| {m['cod']:.1f} | {m['prd']:.3f} "
+          f"| {m['prb']:+.3f} ({m['prb_t']:.1f}) | {m['reading']} |")
+    w("")
+
+    p = f["pooled"]
     w("## County pooled (municipality-normalized)")
     w("")
     w("Each sale's ratio is divided by its municipality's median ratio before "
       "pooling, so this compares equity, not revaluation timing.")
     w("")
-    prd_v = ratios.prd(norm_pooled)
-    prb_v = ratios.prb(norm_pooled)
-    w(f"- n = {len(norm_pooled):,}")
-    w(f"- COD = {ratios.cod(norm_pooled):.1f}")
-    w(f"- PRD = {prd_v:.3f}")
-    w(f"- PRB = {prb_v.coefficient:+.3f} (SE {prb_v.std_error:.3f}, t {prb_v.t_stat:.1f})")
-    w(f"- **Reading: {_verdict(prd_v, prb_v)}**")
+    w(f"- n = {p['n']:,}")
+    w(f"- COD = {p['cod']:.1f}")
+    w(f"- PRD = {p['prd']:.3f}")
+    w(f"- PRB = {p['prb']:+.3f} (SE {p['prb_se']:.3f}, t {p['prb_t']:.1f})")
+    w(f"- **Reading: {p['reading']}**")
     w("")
 
     w("## Median normalized ratio by sale-price decile")
     w("")
     w("| decile | n | price range | median price | median normalized ratio |")
     w("|---|---|---|---|---|")
-    table = ratios.decile_table(pooled_pairs, muni_median, pooled_munis,
-                                config.N_DECILES)
-    for row in table:
+    for row in f["deciles"]:
         w(f"| {row['decile']} | {row['n']} "
           f"| ${row['price_min']:,}–${row['price_max']:,} "
-          f"| ${int(row['median_price']):,} | {row['median_norm_ratio']:.3f} |")
-    if table:
-        gap = (table[0]["median_norm_ratio"] / table[-1]["median_norm_ratio"] - 1) * 100
+          f"| ${row['median_price']:,} | {row['median_norm_ratio']:.3f} |")
+    if f["bottom_vs_top_pct"] is not None:
         w("")
-        w(f"Bottom-decile homes are assessed at a ratio **{gap:+.1f}%** relative to "
-          f"top-decile homes.")
+        w(f"Bottom-decile homes are assessed at a ratio **{f['bottom_vs_top_pct']:+.1f}%** "
+          f"relative to top-decile homes.")
     w("")
     w("## Caveats")
     w("")
     w(f"- Single-family, arm's-length, entire-parcel, fee-paying sales "
-      f">= ${config.MIN_SALE_PRICE:,} only; {config.STUDY_YEAR} sales against the "
-      f"{config.STUDY_YEAR} assessment roll.")
+      f">= ${f['min_sale_price']:,} only; {f['study_year']} sales against the "
+      f"{f['study_year']} assessment roll.")
     w("- Small municipalities appear only in the pooled analysis.")
     w("- This memo is an internal finding, not a publication. Editorial decisions "
       "(including whether any illustrative property is ever named) rest with the "
       "editor per docs/editorial-memo-draft.md.")
+    return "\n".join(lines)
 
+
+def run() -> None:
+    findings = compute()
     config.OUTPUT_DIR.mkdir(exist_ok=True)
-    config.FINDINGS_MD.write_text("\n".join(lines), encoding="utf-8")
+    config.FINDINGS_MD.write_text(render_md(findings), encoding="utf-8")
+    config.FINDINGS_JSON.write_text(json.dumps(findings, indent=1), encoding="utf-8")
     print(f"Wrote {config.FINDINGS_MD}")
+    print(f"Wrote {config.FINDINGS_JSON}")
 
 
 if __name__ == "__main__":
