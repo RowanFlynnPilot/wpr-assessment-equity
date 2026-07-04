@@ -46,6 +46,12 @@ ACRE_FLOOR = 2.0            # fingerprint only fires above this: June-2025 evide
 VINTAGE_MIN_SHARE = 0.95    # share of residential parcels whose TAXROLLYEAR must
                             # equal STUDY_YEAR. V11 serves 2024 -> fails until V12.
 JOIN_RATE_MIN = 0.95        # spike measured 0.990 on June 2025 x V11
+TAP_RESULT_CAP = 1000       # TAP caps any single search at 1000 returns (sibling
+                            # spike-confirmed) and truncation is NOT date-ordered:
+                            # a 2026-07-04 full-year pull returned exactly 1000
+                            # rows spread across all 12 months. Backfill therefore
+                            # pulls monthly and fails loudly if any window reaches
+                            # this cap.
 
 # ---- Analysis grouping ------------------------------------------------------------
 MUNI_MIN_N = 30             # minimum trimmed sample for standalone muni statistics

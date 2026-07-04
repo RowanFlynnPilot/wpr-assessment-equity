@@ -31,8 +31,12 @@ finding warrants one.
 `wpr-property-transactions` already owns the one correct path into the DOR TAP
 (GenTax) RETR Advanced Search. This repo imports `tap.download_report(county,
 date_from, date_to, dest_dir)` from a **sibling checkout** at
-`../wpr-property-transactions` and runs it once per study year with a full-year
-window (see Backfill below).
+`../wpr-property-transactions` and runs it as **twelve monthly windows per
+study year, merged on Document Number** (see Backfill below). TAP caps any
+single search at 1,000 returns and the truncation is NOT date-ordered — a
+full-year pull (2026-07-04) returned exactly 1,000 rows spread across all 12
+months, passing a naive window-edge check. Quarterly windows are also over the
+cap (~1,250 rows/quarter at Marathon's ~5,000 recorded conveyances a year).
 
 We parse the raw 78-column CSV **ourselves** (`analysis/retr.py`), not through the
 sibling's `parse.py`, because the study needs columns the transactions feed
@@ -155,10 +159,11 @@ only during backfill.
 - Windows / PowerShell 5.1: separate commands with `;` — never `&&`.
 - Python 3.14 at `C:\Users\rpfly\Projects\`. Sibling checkout expected at
   `C:\Users\rpfly\Projects\wpr-property-transactions`.
-- Backfill (once per study year, ~minutes, needs Playwright from the sibling):
-  `python -m analysis.retr` — full STUDY_YEAR window; asserts the CSV spans
-  January AND December (TAP result-cap tripwire; if it ever fails, the fix is
-  quarterly windows merged on Document Number — a design change, not a retry).
+- Backfill (once per study year, ~30 min, needs Playwright from the sibling):
+  `python -m analysis.retr` — twelve monthly STUDY_YEAR windows merged on
+  Document Number; asserts every monthly pull is non-empty AND below
+  TAP_RESULT_CAP (if a month ever reaches the cap, the window must shrink —
+  a design change, not a retry).
 - Parcel fetch (idempotent, ~42 REST pages): `python -m analysis.parcels`
 - Study: `python -m analysis.study` → `output/findings-2025.md`
 - Tests: `python -m pytest tests/ -q` (pure-function tests; no network)

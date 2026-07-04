@@ -14,8 +14,11 @@ The raw CSV contains names, addresses, and parcel numbers. It lives in raw/
 aggregate-only.
 """
 
+import calendar
 import csv
 import sys
+import tempfile
+import time
 from datetime import date
 from pathlib import Path
 
@@ -72,11 +75,47 @@ def load_study_population(csv_path: Path) -> tuple[list[dict], list[tuple[str, i
 
 # ---- Backfill --------------------------------------------------------------------
 
+_PULL_ATTEMPTS = 3          # same transient-flake retry the sibling's history.py
+                            # uses on this exact browser flow
+
+
+def merge_monthly(monthly: list[list[dict]]) -> tuple[list[dict], int]:
+    """Concatenate monthly pulls in order, deduping on Document Number (the
+    recorded-date windows are disjoint, so a duplicate can only be a window-edge
+    overlap). Returns (rows, n_duplicates_dropped). Pure; unit-tested."""
+    seen: set[str] = set()
+    rows: list[dict] = []
+    dupes = 0
+    for pull in monthly:
+        for r in pull:
+            doc = r["Document Number"].strip()
+            if doc in seen:
+                dupes += 1
+                continue
+            seen.add(doc)
+            rows.append(r)
+    return rows, dupes
+
+
+def _pull(download_report, county: str, d_from: date, d_to: date,
+          tmp_dir: Path) -> Path:
+    for attempt in range(1, _PULL_ATTEMPTS + 1):
+        try:
+            return download_report(county, d_from, d_to, tmp_dir)
+        except Exception as exc:
+            if attempt == _PULL_ATTEMPTS:
+                raise
+            print(f"  {d_from:%Y-%m} attempt {attempt} failed ({exc}); retrying")
+            time.sleep(5)
+
+
 def backfill() -> None:
-    """One full-year TAP pull. Completeness tripwire: the CSV must contain
-    recorded dates in BOTH January and December of the study year — if TAP ever
-    caps a full-year result set, this fails loudly and the fix is a deliberate
-    design change (quarterly windows merged on Document Number), not a retry."""
+    """Twelve monthly TAP pulls merged on Document Number. TAP caps any single
+    search at TAP_RESULT_CAP returns and the truncation is NOT date-ordered
+    (a full-year pull returns a 1000-row sample spread across all 12 months),
+    so wide windows silently sample the year. Marathon runs ~300-500 recorded
+    conveyances a month — comfortably under the cap. Tripwires: every monthly
+    pull must be non-empty AND below the cap."""
     if not config.SIBLING_SCRAPER_REPO.is_dir():
         raise FileNotFoundError(
             f"sibling checkout not found at {config.SIBLING_SCRAPER_REPO} — "
@@ -86,22 +125,41 @@ def backfill() -> None:
 
     config.RAW_DIR.mkdir(exist_ok=True)
     y = config.STUDY_YEAR
-    csv_path = download_report(config.COUNTY, date(y, 1, 1), date(y, 12, 31),
-                               config.RAW_DIR)
-    Path(csv_path).replace(config.RETR_RAW_CSV)
+    monthly: list[list[dict]] = []
+    fieldnames: list[str] | None = None
+    with tempfile.TemporaryDirectory() as tmp:
+        tmp_dir = Path(tmp)
+        for m in range(1, 13):
+            last = calendar.monthrange(y, m)[1]
+            csv_path = _pull(download_report, config.COUNTY,
+                             date(y, m, 1), date(y, m, last), tmp_dir)
+            with open(csv_path, newline="", encoding="utf-8-sig") as f:
+                reader = csv.DictReader(f)
+                rows = list(reader)
+            if fieldnames is None:
+                fieldnames = list(rows[0].keys()) if rows else None
+            elif rows and list(rows[0].keys()) != fieldnames:
+                raise RuntimeError(f"{y}-{m:02d} pull has a different header — "
+                                   f"TAP report layout changed mid-backfill")
+            if not rows:
+                raise RuntimeError(
+                    f"{y}-{m:02d} pull returned zero rows — implausible for "
+                    f"{config.COUNTY}; TAP flow or window is broken")
+            if len(rows) >= config.TAP_RESULT_CAP:
+                raise RuntimeError(
+                    f"{y}-{m:02d} pull returned {len(rows)} rows — at the TAP "
+                    f"result cap; the month was silently truncated. The window "
+                    f"must shrink (a design change), not be retried.")
+            print(f"  {y}-{m:02d}: {len(rows)} rows")
+            monthly.append(rows)
 
-    months = set()
-    with open(config.RETR_RAW_CSV, newline="", encoding="utf-8-sig") as f:
-        for r in csv.DictReader(f):
-            mm, _, yyyy = r["Recorded Date"].strip().partition("-")
-            if yyyy.endswith(str(y)):
-                months.add(int(mm))
-    if not {1, 12} <= months:
-        raise RuntimeError(
-            f"backfill CSV covers months {sorted(months)} — missing the window "
-            f"edges. TAP likely capped the result set; redesign as quarterly "
-            f"windows merged on Document Number.")
-    print(f"Backfill complete: {config.RETR_RAW_CSV} (months {sorted(months)})")
+    merged, dupes = merge_monthly(monthly)
+    with open(config.RETR_RAW_CSV, "w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerows(merged)
+    print(f"Backfill complete: {config.RETR_RAW_CSV} "
+          f"({len(merged)} rows from 12 monthly pulls, {dupes} duplicates dropped)")
 
 
 if __name__ == "__main__":
