@@ -13,9 +13,27 @@ and the UChicago Center for Municipal Finance national study).
 **Analysis-first.** The primary deliverable is `output/findings-<year>.md` — a
 findings memo for the editor. `frontend/` presents the same findings as a
 WPR-branded widget (see Decisions log); it reads ONLY the aggregate
-`output/findings.json` the study writes. Whether the widget is ever published
-or embedded remains a separate editorial decision — there is no deploy
-workflow in this repo.
+`output/findings.json` the study writes, and deploys to GitHub Pages on push
+(`.github/workflows/deploy.yml`).
+
+## Publishing workflow (the standard process)
+
+Nothing goes live without a human push — the pipeline never publishes on its
+own. When a study run produces new findings:
+
+1. **Notify.** Whoever ran the study (usually a working session in this repo)
+   surfaces the regenerated `output/findings-<year>.md` and `findings.json`
+   to Rowan with the headline numbers. Nothing is committed yet.
+2. **Review & update.** Rowan reads the memo. When satisfied, commit and push
+   the two output files (plus any config change). That push IS the sign-off.
+3. **Live shortly.** The push triggers `deploy.yml` (it watches
+   `output/findings.json` and `frontend/**`), which rebuilds the widget and
+   republishes Pages in ~2 minutes at
+   https://rowanflynnpilot.github.io/wpr-assessment-equity/ — the WordPress
+   iframe (once embedded) picks it up with no WordPress change.
+
+First-deploy note: if the initial Actions run fails with a Pages-not-enabled
+error, set Settings → Pages → Source = "GitHub Actions" once and re-run.
 
 ## Decisions log
 
@@ -26,8 +44,13 @@ workflow in this repo.
 - **Findings widget greenlit.** Rowan 2026-07-04 (same day, after the 2024
   findings landed): build `frontend/` in the WPR brand system (Oswald /
   Merriweather / typewriter roundel, matching wausaupilotandreview.com and the
-  restyled transactions widget). Publishing/embedding still needs editorial
-  sign-off; the widget consumes `output/findings.json` (aggregate-only).
+  restyled transactions widget). The widget consumes `output/findings.json`
+  (aggregate-only).
+- **Publication approved.** Rowan 2026-07-04: GitHub Pages deploy via
+  `.github/workflows/deploy.yml` (same pattern as the transactions widget).
+  The standard update process is documented below ("Publishing workflow").
+  Whether/where the widget is embedded on wausaupilotandreview.com remains
+  Rowan's manual step.
 - **This repo reuses the RETR scraper from `wpr-property-transactions`** (sibling
   checkout) for browser automation only. It does NOT fork the Playwright logic.
 

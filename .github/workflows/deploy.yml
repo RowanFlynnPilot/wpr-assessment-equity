@@ -1,0 +1,59 @@
+name: deploy-pages
+
+# Build the Vite widget and publish to GitHub Pages. Runs when the widget or
+# the committed findings feed changes, and on demand. Same pattern as
+# wpr-property-transactions. The feed is served from output/ via Vite's
+# publicDir, so pushing a new findings.json republishes the live numbers.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "frontend/**"
+      - "output/findings.json"
+      - ".github/workflows/deploy.yml"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# One live deploy at a time; don't cancel an in-flight publish.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install
+        run: npm ci
+        working-directory: frontend
+      - name: Build
+        run: npm run build
+        working-directory: frontend
+      # enablement lets the first run switch the repo's Pages source to
+      # GitHub Actions; if it errors, set it once by hand (Settings -> Pages).
+      - uses: actions/configure-pages@v6
+        with:
+          enablement: true
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: frontend/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5
