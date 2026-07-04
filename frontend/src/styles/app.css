@@ -209,6 +209,19 @@ h2 {
   font-size: 0.75rem;
   color: #999;
 }
+.swatch {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+  vertical-align: baseline;
+}
+.swatch-amber {
+  background: var(--wpr-gold);
+}
+.swatch-teal {
+  background: var(--wpr-teal);
+}
 .chart-tip {
   font-family: var(--font-ui);
   background: #fff;
@@ -352,6 +365,11 @@ h2 {
 @media (max-width: 480px) {
   .kpi-grid {
     grid-template-columns: 1fr;
+  }
+  /* Per-bar value labels collide at phone widths; the tooltip still carries
+     the exact values. */
+  .decile .recharts-label-list {
+    display: none;
   }
   .wpr-masthead {
     padding: 12px 14px 10px;

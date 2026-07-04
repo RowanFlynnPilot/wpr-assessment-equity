@@ -3,7 +3,7 @@ import Masthead from "./components/Masthead.jsx";
 import DecileChart from "./components/DecileChart.jsx";
 import MuniTable from "./components/MuniTable.jsx";
 import SampleTable from "./components/SampleTable.jsx";
-import { pctVsPar } from "./lib/format.js";
+import { pctVsPar, fixed, signedFixed } from "./lib/format.js";
 
 // Is a verdict string inside the IAAO bands, or a flag (REGRESSIVE/PROGRESSIVE)?
 const isFlag = (reading) => !reading.startsWith("within");
@@ -44,8 +44,19 @@ export default function App() {
   }
 
   const { county, study_year: year, pooled, reference, deciles } = findings;
-  const bottom = deciles[0];
   const flagged = findings.municipalities.filter((m) => isFlag(m.reading));
+
+  // The decile furthest from its local norm — computed, so the banner can never
+  // assert a superlative the data doesn't support.
+  const maxDecile = deciles.reduce((a, b) =>
+    Math.abs(b.median_norm_ratio - 1) > Math.abs(a.median_norm_ratio - 1) ? b : a
+  );
+  const maxSubject =
+    maxDecile.decile === 1
+      ? `the lowest-priced tenth of homes (under $${maxDecile.price_max.toLocaleString()})`
+      : maxDecile.decile === deciles.length
+        ? `the highest-priced tenth of homes ($${maxDecile.price_min.toLocaleString()}+)`
+        : `homes between $${maxDecile.price_min.toLocaleString()} and $${maxDecile.price_max.toLocaleString()}`;
 
   return (
     <>
@@ -69,10 +80,9 @@ export default function App() {
           <p className="reading-text">
             Across {pooled.n.toLocaleString()} qualifying sales county-wide, assessment
             equity sits {isFlag(pooled.reading) ? "outside" : "inside"} the industry's
-            acceptable bands — but the lowest-priced tenth of homes
-            {" "}({bottom && `under ${"$" + bottom.price_max.toLocaleString()}`}) were
-            assessed {bottom && pctVsPar(bottom.median_norm_ratio)} above their
-            municipality's typical level, the largest deviation of any price group.
+            acceptable bands — and the price group furthest from its local norm is{" "}
+            {maxSubject}, assessed {pctVsPar(maxDecile.median_norm_ratio)} vs the
+            typical level in their own municipality.
           </p>
         </section>
 
@@ -97,8 +107,8 @@ export default function App() {
             </article>
             <article className="kpi-card">
               <div className="kpi-label">Price bias · PRB</div>
-              <div className="kpi-value">{(pooled.prb >= 0 ? "+" : "") + pooled.prb.toFixed(3)}</div>
-              <div className="kpi-sub">t = {pooled.prb_t.toFixed(1)} · band ±0.05</div>
+              <div className="kpi-value">{signedFixed(pooled.prb)}</div>
+              <div className="kpi-sub">t = {fixed(pooled.prb_t)} · band ±0.05</div>
             </article>
           </div>
         </section>

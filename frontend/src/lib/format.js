@@ -23,3 +23,13 @@ export function pctVsPar(ratio, digits = 1) {
   const sign = n > 0 ? "+" : n < 0 ? "−" : "";
   return `${sign}${(Math.abs(n) * 100).toFixed(digits)}%`;
 }
+
+// Fixed-point with a typographic minus (−, not the ASCII hyphen toFixed emits).
+export function fixed(n, digits = 1) {
+  return (n < 0 ? "−" : "") + Math.abs(n).toFixed(digits);
+}
+
+// Fixed-point with an explicit sign: "+0.002" / "−0.011".
+export function signedFixed(n, digits = 3) {
+  return (n > 0 ? "+" : n < 0 ? "−" : "") + Math.abs(n).toFixed(digits);
+}

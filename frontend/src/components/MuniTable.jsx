@@ -1,3 +1,5 @@
+import { fixed, signedFixed } from "../lib/format.js";
+
 // Per-municipality IAAO statistics. Municipality-level numbers are directly
 // comparable to the IAAO reference bands; municipalities under the study's
 // minimum sample are pooled into the county numbers but not shown standalone.
@@ -39,7 +41,7 @@ export default function MuniTable({ rows, reference, flaggedCount }) {
                   <td className="num mono">{m.cod.toFixed(1)}</td>
                   <td className="num mono">{m.prd.toFixed(3)}</td>
                   <td className="num mono">
-                    {(m.prb >= 0 ? "+" : "") + m.prb.toFixed(3)} ({m.prb_t.toFixed(1)})
+                    {signedFixed(m.prb)} ({fixed(m.prb_t)})
                   </td>
                   <td>
                     <span className={`reading-badge sm ${flag ? "flag" : "ok"}`}>

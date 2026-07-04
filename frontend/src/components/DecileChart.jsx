@@ -34,50 +34,58 @@ function DecileTip({ active, payload }) {
   );
 }
 
-// The money chart: median municipality-normalized assessment ratio by
-// sale-price decile. 1.00 = assessed exactly at the municipality's typical
-// level; above the line = over-assessed relative to neighbors. The bottom
-// decile is highlighted — it's where the deviation concentrates.
+// The money chart, drawn honestly: each bar is the decile's DEVIATION from the
+// municipality-typical assessment level (median normalized ratio − 1), so bar
+// length encodes exactly the thing the story is about. Amber = assessed above
+// the local norm, teal = below. A zero-based ratio axis would hide the effect;
+// a truncated ratio axis would exaggerate it — deviation bars do neither.
 export default function DecileChart({ deciles, gapPct, year }) {
-  const data = deciles.map((d) => ({ ...d, label: moneyCompact(d.median_price) }));
-  const maxAbove = Math.max(...deciles.map((d) => d.median_norm_ratio));
+  const data = deciles.map((d) => ({
+    ...d,
+    deviation: +(d.median_norm_ratio - 1).toFixed(3),
+    label: moneyCompact(d.median_price),
+  }));
 
   return (
     <section className="decile" aria-label="Assessment ratio by price decile">
       <h2>Who gets assessed above the local norm?</h2>
       <figure className="chart chart-solo">
         <figcaption>
-          Median normalized assessment ratio by sale-price decile · {year}
-          <span className="chart-hint"> · 1.00 = the municipality's typical level</span>
+          Deviation from the municipality's typical assessment level, by sale-price
+          decile · {year}
+          <span className="chart-hint">
+            {" "}
+            · <span className="swatch swatch-amber" /> above the local norm ·{" "}
+            <span className="swatch swatch-teal" /> below
+          </span>
         </figcaption>
         <div className="chart-body">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={data} margin={{ left: 8, right: 16, top: 20 }}>
+            <BarChart data={data} margin={{ left: 8, right: 16, top: 18, bottom: 2 }}>
               <CartesianGrid vertical={false} stroke={GRID} />
               <XAxis
                 dataKey="label"
                 tick={{ fontSize: 11 }}
                 stroke={AXIS}
-                interval={0}
+                minTickGap={10}
                 tickMargin={6}
               />
               <YAxis
-                domain={[0.9, Math.max(1.1, Math.ceil(maxAbove * 20) / 20)]}
-                tickFormatter={(v) => v.toFixed(2)}
+                tickFormatter={(v) => pctVsPar(1 + v, 0)}
                 tick={{ fontSize: 11 }}
                 stroke={AXIS}
                 width={44}
               />
               <Tooltip content={<DecileTip />} cursor={{ fill: "rgba(58,134,124,0.08)" }} />
-              <ReferenceLine y={1} stroke={LABEL} strokeDasharray="4 3" />
-              <Bar dataKey="median_norm_ratio" radius={[3, 3, 0, 0]} isAnimationActive={false}>
+              <ReferenceLine y={0} stroke={LABEL} />
+              <Bar dataKey="deviation" radius={[3, 3, 0, 0]} isAnimationActive={false}>
                 {data.map((d) => (
-                  <Cell key={d.decile} fill={d.decile === 1 ? AMBER : TEAL} />
+                  <Cell key={d.decile} fill={d.deviation > 0 ? AMBER : TEAL} />
                 ))}
                 <LabelList
-                  dataKey="median_norm_ratio"
+                  dataKey="deviation"
                   position="top"
-                  formatter={(v) => v.toFixed(2)}
+                  formatter={(v) => pctVsPar(1 + v)}
                   style={{ fontSize: 11, fill: LABEL }}
                 />
               </Bar>
@@ -88,7 +96,9 @@ export default function DecileChart({ deciles, gapPct, year }) {
       {gapPct != null && (
         <p className="decile-gap">
           Bottom-decile homes are assessed at a ratio <b>{gapPct > 0 ? "+" : ""}{gapPct}%</b>{" "}
-          relative to top-decile homes. Deciles are labeled by their median sale price.
+          relative to top-decile homes. Deciles are labeled by their median sale price;
+          deviations are measured within each home's own municipality, so revaluation
+          timing can't produce them.
         </p>
       )}
     </section>
