@@ -95,6 +95,113 @@ h2 {
   margin: 2.5rem 0 1rem;
 }
 
+/* --- Plain-English explainer ------------------------------------------------ */
+.explain-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+.explain-card {
+  position: relative;
+  background: #fff;
+  border: 1px solid var(--wpr-rule);
+  border-top: 3px solid var(--wpr-slate);
+  box-shadow: var(--shadow);
+  padding: 1rem 1.1rem 1.1rem;
+}
+.explain-step {
+  position: absolute;
+  top: -14px;
+  left: 14px;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--wpr-slate);
+  border: 2px solid #fff;
+  color: #fff;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+.explain-card h3 {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 1.02rem;
+  margin: 0.35rem 0 0.45rem;
+  color: var(--wpr-ink);
+}
+.explain-card p {
+  margin: 0;
+  font-size: 0.86rem;
+  line-height: 1.6;
+  color: #444;
+}
+
+/* --- Glossary (definitions panel) ------------------------------------------- */
+.gloss details > summary {
+  list-style: none;
+  cursor: pointer;
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.gloss summary::-webkit-details-marker {
+  display: none;
+}
+.gloss summary h2 {
+  display: inline-block;
+  margin: 1.75rem 0 0.75rem;
+}
+.gloss summary h2::after {
+  content: " ▸";
+  color: var(--wpr-teal);
+}
+.gloss details[open] summary h2::after {
+  content: " ▾";
+}
+.gloss-hint {
+  font-family: var(--font-ui);
+  font-size: 0.8rem;
+  color: #777;
+}
+.gloss-list {
+  margin: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+.gloss-item {
+  background: #fff;
+  border: 1px solid var(--wpr-rule);
+  padding: 0.85rem 1rem;
+}
+.gloss-item dt {
+  font-family: var(--font-ui);
+  font-weight: 600;
+  color: var(--wpr-ink);
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+.gloss-val {
+  font-family: var(--font-data);
+  font-weight: 400;
+  font-size: 0.72rem;
+  color: var(--wpr-teal);
+  white-space: nowrap;
+}
+.gloss-item dd {
+  margin: 0.45rem 0 0;
+  font-size: 0.85rem;
+  line-height: 1.6;
+  color: #444;
+}
+
 /* --- Overall reading banner ------------------------------------------------ */
 .reading {
   display: flex;
@@ -175,6 +282,14 @@ h2 {
   font-size: 0.74rem;
   color: #888;
   margin-top: 0.35rem;
+}
+.kpi-plain {
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: #666;
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px dotted var(--wpr-rule);
 }
 
 /* --- Charts -------------------------------------------------------------------- */
@@ -360,6 +475,13 @@ h2 {
 @media (max-width: 880px) {
   .kpi-grid {
     grid-template-columns: repeat(2, 1fr);
+  }
+  .explain-cards {
+    grid-template-columns: 1fr;
+    gap: 1.35rem; /* room for the overhanging step medallions */
+  }
+  .gloss-list {
+    grid-template-columns: 1fr;
   }
 }
 @media (max-width: 480px) {

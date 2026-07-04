@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import Masthead from "./components/Masthead.jsx";
+import { HowItWorks, Definitions } from "./components/Explainer.jsx";
 import DecileChart from "./components/DecileChart.jsx";
 import MuniTable from "./components/MuniTable.jsx";
 import SampleTable from "./components/SampleTable.jsx";
@@ -73,6 +74,8 @@ export default function App() {
           </p>
         </header>
 
+        <HowItWorks county={county} year={year} />
+
         <section className="reading" aria-label="Overall reading">
           <span className={`reading-badge ${isFlag(pooled.reading) ? "flag" : "ok"}`}>
             {isFlag(pooled.reading) ? pooled.reading.split(" — ")[0] : "WITHIN IAAO EQUITY BANDS"}
@@ -92,11 +95,13 @@ export default function App() {
               <div className="kpi-label">Sales studied</div>
               <div className="kpi-value">{pooled.n.toLocaleString()}</div>
               <div className="kpi-sub">{year} arm's-length single-family sales</div>
+              <div className="kpi-plain">every qualifying open-market home sale, matched to its assessment</div>
             </article>
             <article className="kpi-card">
               <div className="kpi-label">Uniformity · COD</div>
               <div className="kpi-value">{pooled.cod.toFixed(1)}</div>
               <div className="kpi-sub">IAAO standard: ≤ {reference.cod_max_sfr.toFixed(0)}</div>
+              <div className="kpi-plain">the size of the assessment lottery — a typical home's ratio sits ~{pooled.cod.toFixed(0)}% from the middle</div>
             </article>
             <article className="kpi-card">
               <div className="kpi-label">Regressivity · PRD</div>
@@ -104,14 +109,18 @@ export default function App() {
               <div className="kpi-sub">
                 acceptable {reference.prd_band[0].toFixed(2)}–{reference.prd_band[1].toFixed(2)}
               </div>
+              <div className="kpi-plain">above {reference.prd_band[1].toFixed(2)} would mean cheaper homes carry more than their share</div>
             </article>
             <article className="kpi-card">
               <div className="kpi-label">Price bias · PRB</div>
               <div className="kpi-value">{signedFixed(pooled.prb)}</div>
               <div className="kpi-sub">t = {fixed(pooled.prb_t)} · band ±0.05</div>
+              <div className="kpi-plain">how the assessment level shifts each time home value doubles</div>
             </article>
           </div>
         </section>
+
+        <Definitions pooled={pooled} reference={reference} />
 
         <DecileChart
           deciles={deciles}

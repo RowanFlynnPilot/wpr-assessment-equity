@@ -49,6 +49,13 @@ export default function DecileChart({ deciles, gapPct, year }) {
   return (
     <section className="decile" aria-label="Assessment ratio by price decile">
       <h2>Who gets assessed above the local norm?</h2>
+      <p className="section-hint">
+        How to read this: every {year} sale is sorted by price and split into ten
+        equal groups, cheapest on the left. Each bar shows how far that group's
+        typical assessment sits from the <b>norm in its own community</b> — 0% means
+        assessed exactly like the typical local home, bars above the line mean
+        assessed high (and therefore taxed high) relative to the neighbors.
+      </p>
       <figure className="chart chart-solo">
         <figcaption>
           Deviation from the municipality's typical assessment level, by sale-price
