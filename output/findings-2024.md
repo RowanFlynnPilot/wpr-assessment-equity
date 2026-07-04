@@ -62,8 +62,27 @@ Each sale's ratio is divided by its municipality's median ratio before pooling, 
 
 Bottom-decile homes are assessed at a ratio **+7.6%** relative to top-decile homes.
 
+## Property-tax dollars (tax-shift illustration)
+
+Actual net property tax (parcel `NETPRPTA`) on 1,409 of the study sales. "Shift" is what the household paid minus what the county-average effective rate (1.33% of sale price) would charge — positive means paying more than a flat-rate county would ask.
+
+| decile | n | median price | median net tax | median eff. rate | median shift |
+|---|---|---|---|---|---|
+| 1 | 140 | $70,000 | $911 | 1.47% | +$47 |
+| 2 | 141 | $131,000 | $1,889 | 1.46% | +$148 |
+| 3 | 141 | $164,000 | $2,341 | 1.46% | +$203 |
+| 4 | 141 | $190,000 | $2,698 | 1.43% | +$195 |
+| 5 | 141 | $220,000 | $2,920 | 1.34% | +$23 |
+| 6 | 141 | $248,000 | $3,229 | 1.29% | −$115 |
+| 7 | 141 | $276,000 | $3,548 | 1.27% | −$191 |
+| 8 | 141 | $315,000 | $3,845 | 1.22% | −$359 |
+| 9 | 141 | $375,000 | $4,710 | 1.26% | −$287 |
+| 10 | 141 | $525,000 | $7,106 | 1.26% | −$323 |
+
 ## Caveats
 
 - Single-family, arm's-length, entire-parcel, fee-paying sales >= $10,000 only; 2024 sales against the 2024 assessment roll.
 - Small municipalities appear only in the pooled analysis.
+- The tax-shift table is an illustration, not a simulation: NETPRPTA is net of credits, and it holds levies fixed (a re-assessment would also shift rates). Sales with no reported net tax are excluded from it. Its gradient blends assessment inequity WITH municipal rate geography — lower-priced homes concentrating in higher-rate municipalities also steepens it.
+- Independent context: the UChicago Center for Municipal Finance's own Marathon County study (First American sales, 2014–2023) found 67% of the lowest-value homes over-assessed vs 45% of the highest-value homes — same direction as this study, different data and method (county-median normalization). Wisconsin Policy Forum (2023) documents the statewide revaluation-staleness backdrop. See docs/data-sources.md.
 - This memo is an internal finding, not a publication. Editorial decisions (including whether any illustrative property is ever named) rest with the editor per docs/editorial-memo-draft.md.

@@ -18,11 +18,18 @@ from .join import join
 from .retr import load_study_population
 
 
-def _pairs_by_muni(matches) -> dict[str, list[tuple[int, int]]]:
-    by_muni: dict[str, list[tuple[int, int]]] = defaultdict(list)
+def _records_by_muni(matches) -> dict[str, list[tuple[int, int, float]]]:
+    """(assessed, price, net_tax) per municipality. net_tax = NETPRPTA (actual
+    net property tax on the parcel), 0.0 when the layer carries none."""
+    by_muni: dict[str, list[tuple[int, int, float]]] = defaultdict(list)
     for m in matches:
         assessed = int(float(m.parcel["CNTASSDVALUE"]))
-        by_muni[m.parcel["PLACENAME"].strip()].append((assessed, m.sale["_price"]))
+        raw_tax = (m.parcel.get("NETPRPTA") or "").strip()
+        try:
+            tax = float(raw_tax)
+        except ValueError:
+            tax = 0.0
+        by_muni[m.parcel["PLACENAME"].strip()].append((assessed, m.sale["_price"], tax))
     return by_muni
 
 
@@ -46,31 +53,33 @@ def compute() -> dict:
     index = parcels.load()
     matches, join_excl = join(sales, index)
 
-    by_muni = _pairs_by_muni(matches)
+    by_muni = _records_by_muni(matches)
 
     # Per-municipality trimming + medians (the normalization denominators).
-    trimmed: dict[str, list[tuple[int, int]]] = {}
+    # trimmed holds (assessed, price, tax) triples; stats read (assessed, price).
+    trimmed: dict[str, list[tuple[int, int, float]]] = {}
     n_trimmed_total = 0
     muni_median: dict[str, float] = {}
-    for muni, pairs in by_muni.items():
-        kept, n_trim = ratios.iqr_trim(pairs)
+    for muni, recs in by_muni.items():
+        kept, n_trim = ratios.iqr_trim(recs)
         trimmed[muni] = kept
         n_trimmed_total += n_trim
         if kept:
-            muni_median[muni] = ratios.median_ratio(kept)
+            muni_median[muni] = ratios.median_ratio([(a, p) for a, p, _ in kept])
 
     # Pooled, municipality-normalized sample.
-    pooled_pairs, pooled_munis = [], []
-    for muni, pairs in trimmed.items():
+    pooled_pairs, pooled_munis, pooled_tax = [], [], []
+    for muni, recs in trimmed.items():
         if muni in muni_median:
-            pooled_pairs.extend(pairs)
-            pooled_munis.extend([muni] * len(pairs))
+            pooled_pairs.extend((a, p) for a, p, _ in recs)
+            pooled_tax.extend((p, t) for _, p, t in recs if t > 0)
+            pooled_munis.extend([muni] * len(recs))
     norm_pooled = [(a / muni_median[m], p)
                    for (a, p), m in zip(pooled_pairs, pooled_munis)]
 
     muni_rows = []
     for muni in sorted(trimmed, key=lambda m: -len(trimmed[m])):
-        pairs = trimmed[muni]
+        pairs = [(a, p) for a, p, _ in trimmed[muni]]
         if len(pairs) < config.MUNI_MIN_N:
             continue
         p_v = ratios.prd(pairs)
@@ -97,6 +106,21 @@ def compute() -> dict:
     ]
     gap = ((deciles[0]["median_norm_ratio"] / deciles[-1]["median_norm_ratio"] - 1) * 100
            if deciles else None)
+
+    # Dollar tax-shift illustration (NETPRPTA = actual net property tax).
+    overall_etr, shift_rows = ratios.tax_shift_table(pooled_tax, config.N_DECILES)
+    tax_shift = {
+        "n": len(pooled_tax),
+        "overall_etr": round(overall_etr, 5),
+        "deciles": [
+            {"decile": r["decile"], "n": r["n"],
+             "median_price": int(r["median_price"]),
+             "median_tax": int(round(r["median_tax"])),
+             "median_etr": round(r["median_etr"], 5),
+             "median_shift": int(round(r["median_shift"]))}
+            for r in shift_rows
+        ],
+    }
 
     return {
         "generated": date.today().isoformat(),
@@ -130,6 +154,7 @@ def compute() -> dict:
         },
         "deciles": deciles,
         "bottom_vs_top_pct": round(gap, 1) if gap is not None else None,
+        "tax_shift": tax_shift,
     }
 
 
@@ -194,12 +219,41 @@ def render_md(f: dict) -> str:
         w(f"Bottom-decile homes are assessed at a ratio **{f['bottom_vs_top_pct']:+.1f}%** "
           f"relative to top-decile homes.")
     w("")
+
+    ts = f.get("tax_shift") or {}
+    if ts.get("deciles"):
+        w("## Property-tax dollars (tax-shift illustration)")
+        w("")
+        w(f"Actual net property tax (parcel `NETPRPTA`) on {ts['n']:,} of the study "
+          f"sales. \"Shift\" is what the household paid minus what the county-average "
+          f"effective rate ({ts['overall_etr'] * 100:.2f}% of sale price) would "
+          f"charge — positive means paying more than a flat-rate county would ask.")
+        w("")
+        w("| decile | n | median price | median net tax | median eff. rate | median shift |")
+        w("|---|---|---|---|---|---|")
+        for r in ts["deciles"]:
+            w(f"| {r['decile']} | {r['n']} | ${r['median_price']:,} "
+              f"| ${r['median_tax']:,} | {r['median_etr'] * 100:.2f}% "
+              f"| {'+' if r['median_shift'] >= 0 else '−'}${abs(r['median_shift']):,} |")
+        w("")
+
     w("## Caveats")
     w("")
     w(f"- Single-family, arm's-length, entire-parcel, fee-paying sales "
       f">= ${f['min_sale_price']:,} only; {f['study_year']} sales against the "
       f"{f['study_year']} assessment roll.")
     w("- Small municipalities appear only in the pooled analysis.")
+    w("- The tax-shift table is an illustration, not a simulation: NETPRPTA is net "
+      "of credits, and it holds levies fixed (a re-assessment would also shift "
+      "rates). Sales with no reported net tax are excluded from it. Its gradient "
+      "blends assessment inequity WITH municipal rate geography — lower-priced "
+      "homes concentrating in higher-rate municipalities also steepens it.")
+    w("- Independent context: the UChicago Center for Municipal Finance's own "
+      "Marathon County study (First American sales, 2014–2023) found 67% of the "
+      "lowest-value homes over-assessed vs 45% of the highest-value homes — same "
+      "direction as this study, different data and method (county-median "
+      "normalization). Wisconsin Policy Forum (2023) documents the statewide "
+      "revaluation-staleness backdrop. See docs/data-sources.md.")
     w("- This memo is an internal finding, not a publication. Editorial decisions "
       "(including whether any illustrative property is ever named) rest with the "
       "editor per docs/editorial-memo-draft.md.")

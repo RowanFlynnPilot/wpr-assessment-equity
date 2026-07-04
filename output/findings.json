@@ -243,5 +243,91 @@
    "median_norm_ratio": 1.004
   }
  ],
- "bottom_vs_top_pct": 7.6
+ "bottom_vs_top_pct": 7.6,
+ "tax_shift": {
+  "n": 1409,
+  "overall_etr": 0.01333,
+  "deciles": [
+   {
+    "decile": 1,
+    "n": 140,
+    "median_price": 70000,
+    "median_tax": 911,
+    "median_etr": 0.01473,
+    "median_shift": 47
+   },
+   {
+    "decile": 2,
+    "n": 141,
+    "median_price": 131000,
+    "median_tax": 1889,
+    "median_etr": 0.01457,
+    "median_shift": 148
+   },
+   {
+    "decile": 3,
+    "n": 141,
+    "median_price": 164000,
+    "median_tax": 2341,
+    "median_etr": 0.01455,
+    "median_shift": 203
+   },
+   {
+    "decile": 4,
+    "n": 141,
+    "median_price": 190000,
+    "median_tax": 2698,
+    "median_etr": 0.01428,
+    "median_shift": 195
+   },
+   {
+    "decile": 5,
+    "n": 141,
+    "median_price": 220000,
+    "median_tax": 2920,
+    "median_etr": 0.01343,
+    "median_shift": 23
+   },
+   {
+    "decile": 6,
+    "n": 141,
+    "median_price": 248000,
+    "median_tax": 3229,
+    "median_etr": 0.01289,
+    "median_shift": -115
+   },
+   {
+    "decile": 7,
+    "n": 141,
+    "median_price": 276000,
+    "median_tax": 3548,
+    "median_etr": 0.01267,
+    "median_shift": -191
+   },
+   {
+    "decile": 8,
+    "n": 141,
+    "median_price": 315000,
+    "median_tax": 3845,
+    "median_etr": 0.01217,
+    "median_shift": -359
+   },
+   {
+    "decile": 9,
+    "n": 141,
+    "median_price": 375000,
+    "median_tax": 4710,
+    "median_etr": 0.01256,
+    "median_shift": -287
+   },
+   {
+    "decile": 10,
+    "n": 141,
+    "median_price": 525000,
+    "median_tax": 7106,
+    "median_etr": 0.01261,
+    "median_shift": -323
+   }
+  ]
+ }
 }

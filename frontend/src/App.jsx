@@ -119,6 +119,26 @@ export default function App() {
           year={year}
         />
 
+        {findings.tax_shift?.deciles?.length > 0 && (() => {
+          const ts = findings.tax_shift.deciles;
+          const top = ts[ts.length - 1];
+          const maxOver = ts.reduce((a, b) => (b.median_shift > a.median_shift ? b : a));
+          return (
+            <p className="decile-gap">
+              In dollars: the bottom deciles carried effective tax rates around{" "}
+              <b>{(ts[0].median_etr * 100).toFixed(2)}%</b> of sale price versus{" "}
+              <b>{(top.median_etr * 100).toFixed(2)}%</b> for the most expensive tenth.
+              Against a county-average rate, the median home around{" "}
+              ${maxOver.median_price.toLocaleString()} paid{" "}
+              <b>${maxOver.median_shift.toLocaleString()} more</b> per year, while the
+              median top-decile home paid{" "}
+              <b>${Math.abs(top.median_shift).toLocaleString()} less</b> — an
+              illustration that blends assessment inequity with municipal rate
+              differences (details and caveats in the findings memo).
+            </p>
+          );
+        })()}
+
         <MuniTable
           rows={findings.municipalities}
           reference={reference}

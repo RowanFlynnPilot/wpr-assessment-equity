@@ -21,13 +21,15 @@ def ratio(assessed: float, price: float) -> float:
 
 def iqr_trim(pairs: list[Pair]) -> tuple[list[Pair], int]:
     """IAAO outlier trimming: drop pairs whose ratio lies outside
-    [Q1 - 1.5*IQR, Q3 + 1.5*IQR]. Returns (kept, n_trimmed)."""
+    [Q1 - 1.5*IQR, Q3 + 1.5*IQR]. Returns (kept, n_trimmed). Tuples may carry
+    extra trailing fields (e.g. net tax); only [0]=assessed and [1]=price are
+    read, and rows pass through intact."""
     if len(pairs) < 4:
         return pairs, 0
-    rs = sorted(ratio(a, p) for a, p in pairs)
+    rs = sorted(ratio(p[0], p[1]) for p in pairs)
     q1, _, q3 = statistics.quantiles(rs, n=4)
     lo, hi = q1 - 1.5 * (q3 - q1), q3 + 1.5 * (q3 - q1)
-    kept = [(a, p) for a, p in pairs if lo <= ratio(a, p) <= hi]
+    kept = [p for p in pairs if lo <= ratio(p[0], p[1]) <= hi]
     return kept, len(pairs) - len(kept)
 
 
@@ -89,6 +91,35 @@ def prb(pairs: list[Pair]) -> PRB:
     sse = sum((y - (a0 + b * x)) ** 2 for x, y in zip(xs, ys))
     se = math.sqrt((sse / (n - 2)) / sxx)
     return PRB(coefficient=b, std_error=se, t_stat=b / se if se else float("inf"), n=n)
+
+
+def tax_shift_table(
+    price_tax: list[tuple[float, float]], n_deciles: int = 10,
+) -> tuple[float, list[dict]]:
+    """Dollar tax-shift illustration (the CMF method, medianized): for each
+    sale-price decile, the median actual net tax, median effective tax rate
+    (tax / price), and the median SHIFT — what the household paid minus what
+    the county-average effective rate would charge on its sale price. Positive
+    shift = paying more than a flat-rate county would ask. `price_tax` is
+    (sale_price, net_tax) with tax > 0. Returns (overall_etr, rows)."""
+    if not price_tax:
+        return 0.0, []
+    overall = sum(t for _, t in price_tax) / sum(p for p, _ in price_tax)
+    rows = sorted(price_tax)
+    out = []
+    for d in range(n_deciles):
+        chunk = rows[d * len(rows) // n_deciles:(d + 1) * len(rows) // n_deciles]
+        if not chunk:
+            continue
+        out.append({
+            "decile": d + 1,
+            "n": len(chunk),
+            "median_price": statistics.median(p for p, _ in chunk),
+            "median_tax": statistics.median(t for _, t in chunk),
+            "median_etr": statistics.median(t / p for p, t in chunk),
+            "median_shift": statistics.median(t - overall * p for p, t in chunk),
+        })
+    return overall, out
 
 
 def decile_table(
