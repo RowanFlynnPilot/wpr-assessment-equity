@@ -2,9 +2,13 @@ import { Component, useEffect, useState } from "react";
 import Masthead from "./components/Masthead.jsx";
 import { HowItWorks, Definitions } from "./components/Explainer.jsx";
 import DecileChart from "./components/DecileChart.jsx";
+import TaxShiftChart from "./components/TaxShiftChart.jsx";
+import MuniTiltChart from "./components/MuniTiltChart.jsx";
 import MuniTable from "./components/MuniTable.jsx";
 import SampleTable from "./components/SampleTable.jsx";
 import YearOverYear from "./components/YearOverYear.jsx";
+
+const REPO_URL = "https://github.com/RowanFlynnPilot/wpr-assessment-equity";
 import { pctVsPar, fixed, signedFixed, range } from "./lib/format.js";
 
 // Is a verdict string inside the IAAO bands, or a flag (REGRESSIVE/PROGRESSIVE)?
@@ -177,11 +181,22 @@ export default function App() {
             County with that home's {shownYear} assessment, using the same IAAO
             sales-ratio statistics assessors use to audit themselves.
           </p>
+          <nav className="pagenav" aria-label="On this page">
+            <a href="#how">How it works</a>
+            <a href="#numbers">The numbers</a>
+            {previous && <a href="#changes">What changed</a>}
+            <a href="#chart">Who's assessed high</a>
+            <a href="#dollars">In dollars</a>
+            <a href="#communities">By community</a>
+            <a href="#method">Method</a>
+          </nav>
         </header>
 
-        <HowItWorks county={county} year={shownYear} />
+        <div id="how">
+          <HowItWorks county={county} year={shownYear} />
+        </div>
 
-        <section className="reading" aria-label="Overall reading">
+        <section className="reading" id="numbers" aria-label="Overall reading">
           <div className="reading-hero">
             <span className="reading-hero-num">{pctVsPar(maxDecile.median_norm_ratio)}</span>
             <span className="reading-hero-label">
@@ -248,45 +263,67 @@ export default function App() {
           </div>
         </section>
 
-        {previous && <YearOverYear current={findings} previous={previous} />}
+        {previous && (
+          <div id="changes">
+            <YearOverYear current={findings} previous={previous} />
+          </div>
+        )}
 
         <Definitions pooled={pooled} reference={reference} />
 
-        <DecileChart
-          deciles={deciles}
-          gapPct={findings.bottom_vs_top_pct}
-          bottomCI={bottomCI}
-          year={shownYear}
-        />
+        <div id="chart">
+          <DecileChart
+            deciles={deciles}
+            gapPct={findings.bottom_vs_top_pct}
+            bottomCI={bottomCI}
+            year={shownYear}
+          />
+        </div>
 
-        {findings.tax_shift?.deciles?.length > 0 && (() => {
+        {findings.tax_shift?.deciles?.length > 1 && (() => {
           const ts = findings.tax_shift.deciles;
           const top = ts[ts.length - 1];
           const maxOver = ts.reduce((a, b) => (b.median_shift > a.median_shift ? b : a));
           return (
-            <p className="decile-gap">
-              In dollars: the bottom deciles carried effective tax rates around{" "}
-              <b>{(ts[0].median_etr * 100).toFixed(2)}%</b> of sale price versus{" "}
-              <b>{(top.median_etr * 100).toFixed(2)}%</b> for the most expensive tenth.
-              Against a county-average rate, the median home around{" "}
-              ${maxOver.median_price.toLocaleString()} paid{" "}
-              <b>${maxOver.median_shift.toLocaleString()} more</b> per year, while the
-              median top-decile home paid{" "}
-              <b>${Math.abs(top.median_shift).toLocaleString()} less</b> — an
-              illustration that blends assessment inequity with municipal rate
-              differences (details and caveats in the findings memo).
-            </p>
+            <section className="dollars" id="dollars" aria-label="What it means in dollars">
+              <h2>What it means in dollars</h2>
+              <p className="section-hint">
+                Same ten price groups, now in property-tax dollars. Each bar is what the
+                typical home in that group actually paid, minus what a single county-wide
+                rate on its sale price would have charged — so a bar above the line means
+                that group is carrying more than its share.
+              </p>
+              <TaxShiftChart taxShift={findings.tax_shift} year={shownYear} />
+              <p className="decile-gap">
+                The bottom deciles carried effective tax rates around{" "}
+                <b>{(ts[0].median_etr * 100).toFixed(2)}%</b> of sale price versus{" "}
+                <b>{(top.median_etr * 100).toFixed(2)}%</b> for the most expensive tenth.
+                Against a county-average rate, the median home around{" "}
+                ${maxOver.median_price.toLocaleString()} paid{" "}
+                <b>${maxOver.median_shift.toLocaleString()} more</b> per year, while the
+                median top-decile home paid{" "}
+                <b>${Math.abs(top.median_shift).toLocaleString()} less</b>. This is an
+                illustration, not a bill audit: it holds levies fixed and blends
+                assessment inequity with municipal rate differences (lower-priced homes
+                concentrate in higher-rate communities).
+              </p>
+            </section>
           );
         })()}
 
-        <MuniTable
-          rows={findings.municipalities}
-          reference={reference}
-          flaggedCount={flagged.length}
-          crosscheck={crosscheck}
-        />
+        <div id="communities">
+          <MuniTable
+            rows={findings.municipalities}
+            reference={reference}
+            flaggedCount={flagged.length}
+            crosscheck={crosscheck}
+            chart={<MuniTiltChart rows={findings.municipalities} reference={reference} />}
+          />
+        </div>
 
-        <SampleTable sample={findings.sample} year={shownYear} />
+        <div id="method">
+          <SampleTable sample={findings.sample} year={shownYear} />
+        </div>
 
         <footer className="colophon">
           Method: IAAO sales-ratio study. {shownYear} arm's-length, entire-parcel,
@@ -299,7 +336,10 @@ export default function App() {
           Wisconsin DOR Real Estate Transfer Returns; Wisconsin Statewide Parcel Map
           (local assessor values); DOR Summary of Aggregate Ratios for the cross-check.
           Aggregate statistics only. Generated {findings.generated}. A Wausau Pilot &amp;
-          Review civic-data tool.
+          Review civic-data tool.{" "}
+          <a className="colophon-link" href={REPO_URL} target="_blank" rel="noopener noreferrer">
+            Full methodology and source code →
+          </a>
         </footer>
       </div>
       </ErrorBoundary>

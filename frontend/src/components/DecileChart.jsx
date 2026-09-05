@@ -35,22 +35,33 @@ function DecileTip({ active, payload }) {
 }
 
 // Direct labels only on the two extremes (the story's bars); the axis, the
-// tooltip, and the table twin carry the rest.
-function ExtremeLabel({ x, y, width, height, value, index, labelled }) {
+// tooltip, and the table twin carry the rest. `format` renders the value.
+export function ExtremeLabel({ x, y, width, height, value, index, labelled, format }) {
   if (!labelled.has(index)) return null;
   const up = value >= 0;
+  // Recharts gives negative bars a bottom-origin y and a negative height;
+  // derive the rect's real edges so the label sits just past the data end.
+  const top = Math.min(y, y + height);
+  const bottom = Math.max(y, y + height);
   return (
     <text
       x={x + width / 2}
-      y={up ? y - 6 : y + height + 14}
+      y={up ? top - 6 : bottom + 14}
       textAnchor="middle"
       fontSize={11}
       fontFamily="'Oswald', Helvetica, Arial, sans-serif"
       fill={LABEL}
     >
-      {pctVsPar(1 + value)}
+      {(format || ((v) => pctVsPar(1 + v)))(value)}
     </text>
   );
+}
+
+// Indices of the largest positive and largest negative values in `values`.
+export function extremes(values) {
+  const iMax = values.reduce((best, v, i) => (v > values[best] ? i : best), 0);
+  const iMin = values.reduce((best, v, i) => (v < values[best] ? i : best), 0);
+  return new Set([iMax, iMin]);
 }
 
 // The money chart, drawn honestly: each bar is the decile's DEVIATION from the
@@ -64,9 +75,7 @@ export default function DecileChart({ deciles, gapPct, bottomCI, year }) {
     deviation: +(d.median_norm_ratio - 1).toFixed(3),
     label: moneyCompact(d.median_price),
   }));
-  const iMax = data.reduce((best, d, i) => (d.deviation > data[best].deviation ? i : best), 0);
-  const iMin = data.reduce((best, d, i) => (d.deviation < data[best].deviation ? i : best), 0);
-  const labelled = new Set([iMax, iMin]);
+  const labelled = extremes(data.map((d) => d.deviation));
 
   return (
     <section className="decile" aria-label="Assessment ratio by price decile">
@@ -101,6 +110,9 @@ export default function DecileChart({ deciles, gapPct, bottomCI, year }) {
                 tickMargin={6}
               />
               <YAxis
+                // 20% headroom past the extremes so their direct labels never
+                // collide with the plot edge (deviations are fractions).
+                domain={[(min) => Math.floor((min * 1.2) / 0.01) * 0.01, (max) => Math.ceil((max * 1.2) / 0.01) * 0.01]}
                 tickFormatter={(v) => pctVsPar(1 + v, 0)}
                 tick={{ fontSize: 11, fill: LABEL }}
                 stroke={AXIS}

@@ -707,6 +707,156 @@ h2 {
 }
 
 /* --- Print ------------------------------------------------------------------------- */
+/* --- In-page navigation ------------------------------------------------------ */
+.pagenav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1.1rem;
+  margin-top: 0.9rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid var(--wpr-rule);
+}
+.pagenav a {
+  font-family: var(--font-ui);
+  font-size: 0.74rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--wpr-teal);
+  text-decoration: none;
+}
+.pagenav a:hover,
+.pagenav a:focus-visible {
+  text-decoration: underline;
+  outline: none;
+}
+[id] {
+  scroll-margin-top: 1rem;
+}
+.colophon-link {
+  color: var(--wpr-teal);
+  font-family: var(--font-ui);
+  white-space: nowrap;
+}
+
+/* --- Tilt chart (per-community PRD forest plot, HTML-positioned) ------------- */
+.tilt {
+  margin-bottom: 1rem;
+  padding-bottom: 0.6rem;
+}
+.tilt-ticks,
+.tilt-row {
+  display: grid;
+  grid-template-columns: minmax(9rem, 12rem) 1fr 5.5rem;
+  align-items: center;
+  gap: 0.75rem;
+}
+.tilt-ticks {
+  height: 1.1rem;
+  margin-bottom: 0.2rem;
+}
+.tilt-ticks .tilt-track {
+  height: 100%;
+}
+.tilt-tick {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  font-family: var(--font-ui);
+  font-size: 0.66rem;
+  color: var(--wpr-muted);
+}
+.tilt-rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.tilt-row {
+  min-height: 2rem;
+  border-top: 1px solid var(--wpr-rule);
+}
+.tilt-name {
+  font-family: var(--font-ui);
+  font-size: 0.82rem;
+  color: var(--wpr-ink);
+  line-height: 1.15;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tilt-name small {
+  display: block;
+  font-size: 0.66rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--wpr-muted);
+}
+.tilt-track {
+  position: relative;
+  display: block;
+  height: 1.6rem;
+}
+.tilt-band {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: rgba(15, 143, 122, 0.1);
+}
+.tilt-mid {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--wpr-muted);
+  opacity: 0.5;
+}
+.tilt-whisker {
+  position: absolute;
+  top: 50%;
+  height: 2px;
+  margin-top: -1px;
+  background: var(--wpr-muted);
+}
+.tilt-dot {
+  position: absolute;
+  top: 50%;
+  width: 12px;
+  height: 12px;
+  margin: -6px 0 0 -6px;
+  border-radius: 50%;
+  background: #0f8f7a;
+  box-shadow: 0 0 0 2px #fff; /* the 2px surface ring */
+}
+.tilt-dot.flag {
+  background: var(--wpr-down);
+}
+.tilt-val {
+  font-family: var(--font-data);
+  font-size: 0.8rem;
+  text-align: right;
+  line-height: 1.15;
+}
+.tilt-val .ci {
+  display: block;
+  font-size: 0.66rem;
+}
+.tilt-foot {
+  margin: 0.6rem 0 0 0.25rem;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: var(--wpr-muted);
+  max-width: 78ch;
+}
+@media (max-width: 560px) {
+  .tilt-ticks,
+  .tilt-row {
+    grid-template-columns: 6.5rem 1fr 4.2rem;
+    gap: 0.5rem;
+  }
+  .tilt-tick:nth-child(even) {
+    display: none;
+  }
+}
+
 @media print {
   .page {
     max-width: none;
@@ -754,7 +904,8 @@ h2 {
   }
   /* Per-bar value labels collide at phone widths; the tooltip still carries
      the exact values. */
-  .decile .recharts-label-list {
+  .decile .recharts-label-list,
+  .dollars .recharts-label-list {
     display: none;
   }
   .wpr-masthead {

@@ -5,7 +5,7 @@ import { fixed, signedFixed, range } from "../lib/format.js";
 // minimum sample are pooled into the county numbers but not shown standalone.
 // The optional cross-check feed adds DOR's own published level per community.
 // Below 760px each row becomes a labelled card (data-label on every cell).
-export default function MuniTable({ rows, reference, flaggedCount, crosscheck }) {
+export default function MuniTable({ rows, reference, flaggedCount, crosscheck, chart = null }) {
   const dor = crosscheck
     ? Object.fromEntries(crosscheck.municipalities.map((m) => [m.name, m]))
     : null;
@@ -33,6 +33,7 @@ export default function MuniTable({ rows, reference, flaggedCount, crosscheck })
           </>
         )}
       </p>
+      {chart}
       <div className="table-wrap muni-wrap">
         <table className="muni-table">
           <thead>

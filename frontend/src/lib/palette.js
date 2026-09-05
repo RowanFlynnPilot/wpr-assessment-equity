@@ -12,6 +12,7 @@ export const AMBER = "#c8922e";
 // 2.7:1 on white. UI chrome keeps the brand tokens.
 export const CHART_AMBER = "#b3801c"; // above the local norm
 export const CHART_TEAL = "#0f8f7a"; // below the local norm
+export const STATUS_BAD = "#c0492f"; // flagged (outside the equity bands) — status, never a series
 
 // Recharts chrome, matched to the white newspaper base.
 export const GRID = "#e8e8e6"; // CartesianGrid lines
