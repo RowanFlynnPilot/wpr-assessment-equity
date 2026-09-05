@@ -4,47 +4,103 @@ import { HowItWorks, Definitions } from "./components/Explainer.jsx";
 import DecileChart from "./components/DecileChart.jsx";
 import MuniTable from "./components/MuniTable.jsx";
 import SampleTable from "./components/SampleTable.jsx";
-import { pctVsPar, fixed, signedFixed } from "./lib/format.js";
+import YearOverYear from "./components/YearOverYear.jsx";
+import { pctVsPar, fixed, signedFixed, range } from "./lib/format.js";
 
 // Is a verdict string inside the IAAO bands, or a flag (REGRESSIVE/PROGRESSIVE)?
 const isFlag = (reading) => !reading.startsWith("within");
 
-export default function App() {
-  const [findings, setFindings] = useState(null);
-  const [error, setError] = useState(false);
+const BASE = import.meta.env.BASE_URL;
 
+async function getJSON(path, { optional = false } = {}) {
+  const r = await fetch(`${BASE}${path}`);
+  if (!r.ok) {
+    if (optional) return null;
+    throw new Error(`${path}: ${r.status}`);
+  }
+  return r.json();
+}
+
+// The feed is generated code, but a truncated or half-written file must fail
+// with a readable message rather than a blank page or a stack trace.
+function validate(f) {
+  const need = ["study_year", "county", "reference", "sample", "municipalities", "pooled", "deciles"];
+  const missing = need.filter((k) => f?.[k] == null);
+  if (missing.length) throw new Error(`findings feed is missing: ${missing.join(", ")}`);
+  if (!Array.isArray(f.deciles) || f.deciles.length < 2) throw new Error("findings feed has no deciles");
+  return f;
+}
+
+function Shell({ children }) {
+  return (
+    <>
+      <Masthead />
+      <main className="page">{children}</main>
+    </>
+  );
+}
+
+export default function App() {
+  const [index, setIndex] = useState(null);
+  const [year, setYear] = useState(null);
+  const [data, setData] = useState(null); // { findings, previous, crosscheck }
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Entry: index.json names the years; the latest is the default view.
   useEffect(() => {
-    fetch(`${import.meta.env.BASE_URL}findings.json`)
-      .then((r) => {
-        if (!r.ok) throw new Error(`feed ${r.status}`);
-        return r.json();
+    getJSON("index.json")
+      .then((ix) => {
+        if (!ix?.years?.length) throw new Error("index.json lists no years");
+        setIndex(ix);
+        setYear(ix.latest);
       })
-      .then(setFindings)
-      .catch(() => setError(true));
+      .catch((e) => setError(e.message));
   }, []);
+
+  // Per year: the findings, the prior year (for what-changed), and the optional
+  // DOR cross-check. A year switch holds the previous render dimmed — no flash.
+  useEffect(() => {
+    if (!index || year == null) return;
+    let alive = true;
+    setLoading(true);
+    const years = index.years;
+    const prevYear = years[years.indexOf(year) - 1];
+    Promise.all([
+      getJSON(`findings-${year}.json`).then(validate),
+      prevYear ? getJSON(`findings-${prevYear}.json`, { optional: true }) : null,
+      getJSON(`crosscheck-${year}.json`, { optional: true }),
+    ])
+      .then(([findings, previous, crosscheck]) => {
+        if (!alive) return;
+        setData({ findings, previous, crosscheck });
+        setLoading(false);
+      })
+      .catch((e) => alive && setError(e.message));
+    return () => {
+      alive = false;
+    };
+  }, [index, year]);
 
   if (error) {
     return (
-      <>
-        <Masthead />
-        <main className="page">
-          <p className="empty">Couldn’t load the findings feed. Please try again later.</p>
-        </main>
-      </>
+      <Shell>
+        <p className="empty">
+          Couldn’t load the study right now. <span className="empty-detail">({error})</span>
+        </p>
+      </Shell>
     );
   }
-  if (!findings) {
+  if (!data) {
     return (
-      <>
-        <Masthead />
-        <main className="page">
-          <p className="empty">Loading the study…</p>
-        </main>
-      </>
+      <Shell>
+        <p className="empty">Loading the study…</p>
+      </Shell>
     );
   }
 
-  const { county, study_year: year, pooled, reference, deciles } = findings;
+  const { findings, previous, crosscheck } = data;
+  const { county, study_year: shownYear, pooled, reference, deciles } = findings;
   const flagged = findings.municipalities.filter((m) => isFlag(m.reading));
 
   // The decile furthest from its local norm — computed, so the banner can never
@@ -58,35 +114,71 @@ export default function App() {
       : maxDecile.decile === deciles.length
         ? `the highest-priced tenth of homes ($${maxDecile.price_min.toLocaleString()}+)`
         : `homes between $${maxDecile.price_min.toLocaleString()} and $${maxDecile.price_max.toLocaleString()}`;
+  const bottomCI = findings.bottom_decile_ci;
 
   return (
-    <>
-      <Masthead />
-      <main className="page">
+    <Shell>
+      <div className={loading ? "study is-loading" : "study"} aria-busy={loading}>
         <header className="masthead">
-          <h1>Assessment Equity</h1>
+          <div className="masthead-top">
+            <h1>Assessment Equity</h1>
+            {index.years.length > 1 && (
+              <div className="seg" role="group" aria-label="Study year">
+                {index.years.map((y) => (
+                  <button
+                    key={y}
+                    type="button"
+                    className={y === year ? "active" : ""}
+                    aria-pressed={y === year}
+                    onClick={() => setYear(y)}
+                  >
+                    {y}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
           <p className="dek">
             Wisconsin homeowners pay property taxes on what the assessor says their home
             is worth — so when assessments drift from real sale prices unevenly, the tax
-            burden shifts. We compared every qualifying {year} home sale in {county}{" "}
-            County with that home's {year} assessment, using the same IAAO sales-ratio
-            statistics assessors use to audit themselves.
+            burden shifts. We compared every qualifying {shownYear} home sale in {county}{" "}
+            County with that home's {shownYear} assessment, using the same IAAO
+            sales-ratio statistics assessors use to audit themselves.
           </p>
         </header>
 
-        <HowItWorks county={county} year={year} />
+        <HowItWorks county={county} year={shownYear} />
 
         <section className="reading" aria-label="Overall reading">
-          <span className={`reading-badge ${isFlag(pooled.reading) ? "flag" : "ok"}`}>
-            {isFlag(pooled.reading) ? pooled.reading.split(" — ")[0] : "WITHIN IAAO EQUITY BANDS"}
-          </span>
-          <p className="reading-text">
-            Across {pooled.n.toLocaleString()} qualifying sales county-wide, assessment
-            equity sits {isFlag(pooled.reading) ? "outside" : "inside"} the industry's
-            acceptable bands — and the price group furthest from its local norm is{" "}
-            {maxSubject}, assessed {pctVsPar(maxDecile.median_norm_ratio)} vs the
-            typical level in their own municipality.
-          </p>
+          <div className="reading-hero">
+            <span className="reading-hero-num">{pctVsPar(maxDecile.median_norm_ratio)}</span>
+            <span className="reading-hero-label">
+              {maxDecile.decile === 1 ? "cheapest tenth of homes" : `decile ${maxDecile.decile}`}
+              <br />
+              vs the local norm
+              {maxDecile.decile === 1 && bottomCI && (
+                <>
+                  <br />
+                  <span className="ci">95% CI {pctVsPar(bottomCI[0])} to {pctVsPar(bottomCI[1])}</span>
+                </>
+              )}
+            </span>
+          </div>
+          <div className="reading-body">
+            <span className={`reading-badge ${isFlag(pooled.reading) ? "flag" : "ok"}`}>
+              {isFlag(pooled.reading) ? pooled.reading.split(" — ")[0] : "WITHIN IAAO EQUITY BANDS"}
+            </span>
+            {pooled.uniformity_ok === false && (
+              <span className="reading-badge warn">COD ABOVE STANDARD</span>
+            )}
+            <p className="reading-text">
+              Across {pooled.n.toLocaleString()} qualifying {shownYear} sales county-wide,
+              assessment equity sits {isFlag(pooled.reading) ? "outside" : "inside"} the
+              industry's acceptable bands — and the price group furthest from its local
+              norm is {maxSubject}, assessed {pctVsPar(maxDecile.median_norm_ratio)} vs the
+              typical level in their own municipality.
+            </p>
+          </div>
         </section>
 
         <section className="kpi" aria-label="County-wide statistics">
@@ -94,13 +186,16 @@ export default function App() {
             <article className="kpi-card">
               <div className="kpi-label">Sales studied</div>
               <div className="kpi-value">{pooled.n.toLocaleString()}</div>
-              <div className="kpi-sub">{year} arm's-length single-family sales</div>
+              <div className="kpi-sub">{shownYear} arm's-length single-family sales</div>
               <div className="kpi-plain">every qualifying open-market home sale, matched to its assessment</div>
             </article>
-            <article className="kpi-card">
+            <article className={`kpi-card${pooled.uniformity_ok === false ? " kpi-warn" : ""}`}>
               <div className="kpi-label">Uniformity · COD</div>
               <div className="kpi-value">{pooled.cod.toFixed(1)}</div>
-              <div className="kpi-sub">IAAO standard: ≤ {reference.cod_max_sfr.toFixed(0)}</div>
+              <div className="kpi-sub">
+                IAAO standard: ≤ {reference.cod_max_sfr.toFixed(0)}
+                {pooled.cod_ci && <span className="ci"> · 95% CI {range(pooled.cod_ci, 1)}</span>}
+              </div>
               <div className="kpi-plain">the size of the assessment lottery — a typical home's ratio sits ~{pooled.cod.toFixed(0)}% from the middle</div>
             </article>
             <article className="kpi-card">
@@ -108,6 +203,7 @@ export default function App() {
               <div className="kpi-value">{pooled.prd.toFixed(3)}</div>
               <div className="kpi-sub">
                 acceptable {reference.prd_band[0].toFixed(2)}–{reference.prd_band[1].toFixed(2)}
+                {pooled.prd_ci && <span className="ci"> · 95% CI {range(pooled.prd_ci, 3)}</span>}
               </div>
               <div className="kpi-plain">above {reference.prd_band[1].toFixed(2)} would mean cheaper homes carry more than their share</div>
             </article>
@@ -120,12 +216,15 @@ export default function App() {
           </div>
         </section>
 
+        {previous && <YearOverYear current={findings} previous={previous} />}
+
         <Definitions pooled={pooled} reference={reference} />
 
         <DecileChart
           deciles={deciles}
           gapPct={findings.bottom_vs_top_pct}
-          year={year}
+          bottomCI={bottomCI}
+          year={shownYear}
         />
 
         {findings.tax_shift?.deciles?.length > 0 && (() => {
@@ -152,22 +251,25 @@ export default function App() {
           rows={findings.municipalities}
           reference={reference}
           flaggedCount={flagged.length}
+          crosscheck={crosscheck}
         />
 
-        <SampleTable sample={findings.sample} year={year} />
+        <SampleTable sample={findings.sample} year={shownYear} />
 
         <footer className="colophon">
-          Method: IAAO sales-ratio study. {year} arm's-length, entire-parcel,
+          Method: IAAO sales-ratio study. {shownYear} arm's-length, entire-parcel,
           fee-paying single-family sales of ${findings.min_sale_price.toLocaleString()}+
           are matched to the same year's assessment roll; extreme ratios are IQR-trimmed
           within each municipality, and county-wide statistics are computed on
           municipality-normalized ratios (each sale's ratio divided by its
           municipality's median), so they compare equity — not revaluation timing.
-          Sources: Wisconsin DOR Real Estate Transfer Returns; Wisconsin Statewide
-          Parcel Map (local assessor values). Aggregate statistics only. Generated{" "}
-          {findings.generated}. A Wausau Pilot &amp; Review civic-data tool.
+          Confidence intervals are percentile bootstraps (1,000 resamples). Sources:
+          Wisconsin DOR Real Estate Transfer Returns; Wisconsin Statewide Parcel Map
+          (local assessor values); DOR Summary of Aggregate Ratios for the cross-check.
+          Aggregate statistics only. Generated {findings.generated}. A Wausau Pilot &amp;
+          Review civic-data tool.
         </footer>
-      </main>
-    </>
+      </div>
+    </Shell>
   );
 }

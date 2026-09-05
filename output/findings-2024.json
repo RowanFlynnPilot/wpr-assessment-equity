@@ -1,5 +1,5 @@
 {
- "generated": "2026-07-04",
+ "generated": "2026-09-05",
  "county": "Marathon",
  "study_year": 2024,
  "min_sale_price": 10000,
@@ -76,90 +76,179 @@
    "n": 504,
    "median_ratio": 0.932,
    "cod": 11.0,
+   "cod_ci": [
+    10.2,
+    11.8
+   ],
    "prd": 1.0,
+   "prd_ci": [
+    0.991,
+    1.008
+   ],
    "prb": 0.002,
    "prb_t": 0.3,
-   "reading": "within IAAO equity bands"
+   "median_etr": 0.0169,
+   "reading": "within IAAO equity bands",
+   "uniformity_ok": true
   },
   {
    "name": "VILLAGE OF WESTON",
    "n": 153,
    "median_ratio": 0.889,
    "cod": 9.8,
+   "cod_ci": [
+    8.3,
+    11.1
+   ],
    "prd": 1.005,
+   "prd_ci": [
+    0.999,
+    1.012
+   ],
    "prb": 0.023,
    "prb_t": 1.2,
-   "reading": "within IAAO equity bands"
+   "median_etr": 0.01345,
+   "reading": "within IAAO equity bands",
+   "uniformity_ok": true
   },
   {
    "name": "VILLAGE OF RIB MOUNTAIN",
    "n": 93,
    "median_ratio": 0.618,
    "cod": 13.9,
+   "cod_ci": [
+    11.4,
+    16.0
+   ],
    "prd": 1.02,
+   "prd_ci": [
+    0.997,
+    1.045
+   ],
    "prb": -0.03,
    "prb_t": -1.3,
-   "reading": "within IAAO equity bands"
+   "median_etr": 0.01082,
+   "reading": "within IAAO equity bands",
+   "uniformity_ok": true
   },
   {
    "name": "VILLAGE OF KRONENWETTER",
    "n": 82,
    "median_ratio": 0.682,
    "cod": 11.6,
+   "cod_ci": [
+    9.5,
+    13.6
+   ],
    "prd": 1.01,
+   "prd_ci": [
+    0.999,
+    1.022
+   ],
    "prb": -0.009,
    "prb_t": -0.3,
-   "reading": "within IAAO equity bands"
+   "median_etr": 0.01083,
+   "reading": "within IAAO equity bands",
+   "uniformity_ok": true
   },
   {
    "name": "VILLAGE OF ROTHSCHILD",
    "n": 80,
    "median_ratio": 0.885,
    "cod": 11.4,
+   "cod_ci": [
+    9.2,
+    13.4
+   ],
    "prd": 1.012,
+   "prd_ci": [
+    0.993,
+    1.034
+   ],
    "prb": 0.023,
    "prb_t": 0.8,
-   "reading": "within IAAO equity bands"
+   "median_etr": 0.01253,
+   "reading": "within IAAO equity bands",
+   "uniformity_ok": true
   },
   {
    "name": "CITY OF MOSINEE",
    "n": 50,
    "median_ratio": 0.703,
    "cod": 16.0,
+   "cod_ci": [
+    12.1,
+    19.4
+   ],
    "prd": 1.032,
+   "prd_ci": [
+    1.01,
+    1.055
+   ],
    "prb": -0.048,
    "prb_t": -1.1,
-   "reading": "REGRESSIVE \u2014 lower-priced homes carry proportionally higher assessments"
+   "median_etr": 0.01302,
+   "reading": "REGRESSIVE \u2014 lower-priced homes carry proportionally higher assessments",
+   "uniformity_ok": false
   },
   {
    "name": "VILLAGE OF SPENCER",
    "n": 37,
    "median_ratio": 0.762,
    "cod": 9.7,
+   "cod_ci": [
+    7.0,
+    11.8
+   ],
    "prd": 1.009,
+   "prd_ci": [
+    0.994,
+    1.021
+   ],
    "prb": 0.006,
    "prb_t": 0.2,
-   "reading": "within IAAO equity bands"
+   "median_etr": 0.01376,
+   "reading": "within IAAO equity bands",
+   "uniformity_ok": true
   },
   {
    "name": "CITY OF SCHOFIELD",
    "n": 30,
    "median_ratio": 0.889,
    "cod": 12.0,
+   "cod_ci": [
+    9.1,
+    14.7
+   ],
    "prd": 0.984,
+   "prd_ci": [
+    0.968,
+    1.002
+   ],
    "prb": 0.056,
    "prb_t": 1.8,
-   "reading": "within IAAO equity bands"
+   "median_etr": 0.01235,
+   "reading": "within IAAO equity bands",
+   "uniformity_ok": true
   }
  ],
  "pooled": {
   "n": 1409,
   "cod": 13.6,
+  "cod_ci": [
+   12.7,
+   14.5
+  ],
   "prd": 1.015,
+  "prd_ci": [
+   1.006,
+   1.023
+  ],
   "prb": -0.011,
   "prb_se": 0.007,
   "prb_t": -1.6,
-  "reading": "within IAAO equity bands"
+  "reading": "within IAAO equity bands",
+  "uniformity_ok": true
  },
  "deciles": [
   {
@@ -244,6 +333,10 @@
   }
  ],
  "bottom_vs_top_pct": 7.6,
+ "bottom_decile_ci": [
+  1.039,
+  1.143
+ ],
  "tax_shift": {
   "n": 1409,
   "overall_etr": 0.01333,

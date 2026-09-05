@@ -12,9 +12,13 @@ and the UChicago Center for Municipal Finance national study).
 
 **Analysis-first.** The primary deliverable is `output/findings-<year>.md` — a
 findings memo for the editor. `frontend/` presents the same findings as a
-WPR-branded widget (see Decisions log); it reads ONLY the aggregate
-`output/findings.json` the study writes, and deploys to GitHub Pages on push
-(`.github/workflows/deploy.yml`).
+WPR-branded widget (see Decisions log); it reads ONLY the aggregate feed files
+the pipeline writes to `output/` — `index.json` (years present, latest),
+`findings-<year>.json` (per study year), and the optional
+`crosscheck-<year>.json` (DOR's published level per municipality) — and
+deploys to GitHub Pages on push (`.github/workflows/deploy.yml`). With two or
+more years in the index the widget offers a year switch and a
+"what changed" comparison.
 
 ## Publishing workflow (the standard process)
 
@@ -22,12 +26,14 @@ Nothing goes live without a human push — the pipeline never publishes on its
 own. When a study run produces new findings:
 
 1. **Notify.** Whoever ran the study (usually a working session in this repo)
-   surfaces the regenerated `output/findings-<year>.md` and `findings.json`
-   to Rowan with the headline numbers. Nothing is committed yet.
+   surfaces the regenerated `output/findings-<year>.md`, `findings-<year>.json`,
+   `index.json` and (after `python -m analysis.crosscheck`)
+   `crosscheck-<year>.json` to Rowan with the headline numbers. Nothing is
+   committed yet.
 2. **Review & update.** Rowan reads the memo. When satisfied, commit and push
-   the two output files (plus any config change). That push IS the sign-off.
+   those output files (plus any config change). That push IS the sign-off.
 3. **Live shortly.** The push triggers `deploy.yml` (it watches
-   `output/findings.json` and `frontend/**`), which rebuilds the widget and
+   `output/*.json` and `frontend/**`), which rebuilds the widget and
    republishes Pages in ~2 minutes at
    https://rowanflynnpilot.github.io/wpr-assessment-equity/ — the WordPress
    iframe (once embedded) picks it up with no WordPress change.
@@ -53,6 +59,10 @@ error, set Settings → Pages → Source = "GitHub Actions" once and re-run.
   Rowan's manual step.
 - **This repo reuses the RETR scraper from `wpr-property-transactions`** (sibling
   checkout) for browser automation only. It does NOT fork the Playwright logic.
+- **2025 study run (V12 live).** 2026-09-05: the parcel service was renamed
+  with the V12 release (see Assessments below); after the config fix the 2025
+  study ran with the vintage gate at 100%. Its outputs await Rowan's review
+  per the Publishing workflow — the widget keeps 2024 live until that push.
 
 ## The two sources (and why)
 
@@ -76,7 +86,14 @@ The boundary: sibling repo = browser flow; this repo = everything after the CSV.
 
 ### Assessments: Wisconsin Statewide Parcel Map REST endpoint
 
-`https://services3.arcgis.com/n6uYoouQZW75n5WI/arcgis/rest/services/Wisconsin_Statewide_Parcels/FeatureServer/0`
+`https://services3.arcgis.com/n6uYoouQZW75n5WI/arcgis/rest/services/Wisconsin_Statewide_Parcels_DB/FeatureServer/0`
+
+(Renamed with the V12 release — layer 0 is `V1200_WisconsinParcels_2026`,
+carrying the 2025 tax roll. The pre-V12 path `Wisconsin_Statewide_Parcels`
+now answers "Invalid URL" to every query. If the fetch ever fails that way
+again, list the org's services directory — `.../rest/services?f=json` — and
+look for the parcel service's new name; the 47-field schema has been stable
+across releases.)
 
 Attribute-only paginated queries (`returnGeometry=false`, 2000/page), filtered by
 `CONAME`. Carries per-parcel `CNTASSDVALUE` / `LNDVALUE` / `IMPVALUE` (local
@@ -160,6 +177,21 @@ For ratios r_i = assessed / sale price:
 These four are the defensible, assessor-recognized standard. Report all of them;
 do not invent bespoke statistics.
 
+Reported alongside them (all standard practice, none bespoke):
+
+- **95% confidence intervals** — percentile bootstrap, 1,000 resamples, fixed
+  seed (`ratios.bootstrap_ci`), on COD and PRD (county and per municipality)
+  and on the bottom-decile normalized ratio. The IAAO Standard recommends
+  stating sampling uncertainty; CMF's reports bootstrap the same way.
+- **Uniformity flag** — `uniformity_ok = COD <= IAAO_COD_MAX_SFR`, carried
+  beside (never folded into) the equity verdict, so a loose roll is visible
+  even when the price tilt is inside the bands.
+- **Effective tax rate** — median `NETPRPTA / sale price` per municipality and
+  per decile (the dollar tax-shift illustration).
+- **DOR cross-check** — `python -m analysis.crosscheck` compares our
+  municipality medians with DOR's Summary of Aggregate Ratios, flags residuals
+  from the shared drift, and writes `output/crosscheck-<year>.json`.
+
 ## Privacy & editorial policy
 
 - The raw RETR CSV (names, addresses, parcel numbers) lives in `raw/` which is
@@ -196,7 +228,10 @@ only during backfill.
   a design change, not a retry).
 - Parcel fetch (idempotent, ~42 REST pages): `python -m analysis.parcels`
 - Study: `python -m analysis.study` → `output/findings-<year>.md` (editor memo)
-  + `output/findings.json` (widget feed; both rendered from one computed dict)
+  + `output/findings-<year>.json` (widget feed; both rendered from one computed
+  dict) + `output/index.json` (rebuilt from the feed files present)
+- Cross-check (network; after the study): `python -m analysis.crosscheck` →
+  prints the DOR comparison and writes `output/crosscheck-<year>.json`
 - Tests: `python -m pytest tests/ -q` (pure-function tests; no network)
 - Widget: `cd frontend ; npm install ; npm run dev` (Vite serves at
   `/wpr-assessment-equity/`; `vite.config.js` publicDir points at `output/` so

@@ -6,6 +6,13 @@ export const TEAL_BRIGHT = "#4aaba7";
 export const TEAL_DARK = "#2f6f66"; // selected map bubble / hover states
 export const AMBER = "#c8922e";
 
+// Chart MARKS use slightly deeper steps of the same two hues: validated
+// (dataviz six-checks, light surface) for chroma, CVD separation and 3:1
+// contrast — the brand teal reads gray-ish at bar size and brand amber is
+// 2.7:1 on white. UI chrome keeps the brand tokens.
+export const CHART_AMBER = "#b3801c"; // above the local norm
+export const CHART_TEAL = "#0f8f7a"; // below the local norm
+
 // Recharts chrome, matched to the white newspaper base.
 export const GRID = "#e8e8e6"; // CartesianGrid lines
 export const AXIS = "#a8a8a4"; // axis strokes / tick text

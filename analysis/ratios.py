@@ -7,10 +7,33 @@ medians); the math is identical.
 """
 
 import math
+import random
 import statistics
+from collections.abc import Callable
 from dataclasses import dataclass
 
 Pair = tuple[float, float]
+
+BOOTSTRAP_DRAWS = 1000
+BOOTSTRAP_SEED = 20240101   # fixed: the memo and the feed must be reproducible
+
+
+def bootstrap_ci(
+    pairs: list[Pair], stat: Callable[[list[Pair]], float],
+    draws: int = BOOTSTRAP_DRAWS, seed: int = BOOTSTRAP_SEED,
+) -> tuple[float, float]:
+    """Percentile-bootstrap 95% interval for any statistic on pairs — the
+    standard way ratio studies state sampling uncertainty (the IAAO Standard
+    recommends confidence intervals; CMF's reports bootstrap the same way).
+    Deterministic for a given seed. Requires >= 5 pairs."""
+    if len(pairs) < 5:
+        raise ValueError(f"bootstrap needs >= 5 pairs, got {len(pairs)}")
+    rng = random.Random(seed)
+    n = len(pairs)
+    values = sorted(stat([pairs[rng.randrange(n)] for _ in range(n)]) for _ in range(draws))
+    lo = values[int(0.025 * (draws - 1))]
+    hi = values[int(0.975 * (draws - 1))]
+    return lo, hi
 
 
 def ratio(assessed: float, price: float) -> float:

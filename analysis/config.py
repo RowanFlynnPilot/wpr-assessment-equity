@@ -15,9 +15,13 @@ STUDY_YEAR = 2025                   # sales year AND required assessment roll ye
 SIBLING_SCRAPER_REPO = REPO_ROOT.parent / "wpr-property-transactions"
 
 # ---- Parcel layer (Wisconsin Statewide Parcel Map REST endpoint) ---------------
+# Renamed with the V12 release (layer 0 = V1200_WisconsinParcels_2026, 2025 tax
+# roll); the pre-V12 path "Wisconsin_Statewide_Parcels" now returns "Invalid
+# URL" for every query. Verified 2026-09-05: same 47-field schema, all fields
+# below present, 82,172 of 83,708 Marathon parcels on the 2025 roll.
 PARCEL_ENDPOINT = (
     "https://services3.arcgis.com/n6uYoouQZW75n5WI/arcgis/rest/services/"
-    "Wisconsin_Statewide_Parcels/FeatureServer/0/query"
+    "Wisconsin_Statewide_Parcels_DB/FeatureServer/0/query"
 )
 PARCEL_FIELDS = (
     "PARCELID,PLACENAME,PROPCLASS,AUXCLASS,TAXROLLYEAR,"
@@ -31,8 +35,9 @@ RETR_RAW_CSV = RAW_DIR / f"retr_{STUDY_YEAR}.csv"    # names/addresses/parcels
 PARCEL_CSV = RAW_DIR / f"parcels_{COUNTY.lower()}_{STUDY_YEAR}.csv"
 OUTPUT_DIR = REPO_ROOT / "output"                    # aggregate-only, committable
 FINDINGS_MD = OUTPUT_DIR / f"findings-{STUDY_YEAR}.md"
-FINDINGS_JSON = OUTPUT_DIR / "findings.json"         # latest study; the widget feed
-                                                     # (year is a field inside)
+FINDINGS_JSON = OUTPUT_DIR / f"findings-{STUDY_YEAR}.json"   # widget feed, per year
+INDEX_JSON = OUTPUT_DIR / "index.json"               # {years, latest}: widget entry
+CROSSCHECK_JSON = OUTPUT_DIR / f"crosscheck-{STUDY_YEAR}.json"  # DOR ratios per muni
 
 # ---- Filter waterfall parameters ------------------------------------------------
 MIN_SALE_PRICE = 10_000     # ratio-study floor (NOT the $1,000 editorial floor)

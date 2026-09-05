@@ -60,6 +60,15 @@ def test_parses_one_county_with_placename_keys(tmp_path):
     }
 
 
+def test_tolerates_dor_header_typo(tmp_path):
+    # The 2025 edition shipped "MINUCIPALITY NAME"; column lookup is by
+    # content, so the typo must not break the parse.
+    f = tmp_path / "sumagg.xlsx"
+    typo = [h.replace("MUNICIPALITY NAME", "MINUCIPALITY NAME") for h in HEADERS]
+    _write_sumagg(f, headers=typo)
+    assert parse_sumagg(f, "Marathon")["CITY OF WAUSAU"] == 0.941
+
+
 def test_missing_county_fails_loudly(tmp_path):
     f = tmp_path / "sumagg.xlsx"
     _write_sumagg(f)

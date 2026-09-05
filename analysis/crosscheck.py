@@ -26,10 +26,12 @@ Stdlib xlsx parsing (zipfile + ElementTree): sumagg is a flat one-sheet table
 MFG ADMIN | EQ ADMIN | AGGREGATE RATIO) — verified against the 2024 edition.
 """
 
+import json
 import statistics
 import sys
 import urllib.request
 import zipfile
+from datetime import date
 from pathlib import Path
 from xml.etree import ElementTree as ET
 
@@ -66,13 +68,19 @@ def parse_sumagg(path: Path, county_name: str) -> dict[str, float]:
     if not rows:
         raise RuntimeError(f"{path} has no rows")
     header = [h.replace("\n", " ").strip().upper() for h in rows[0]]
-    try:
-        i_type = header.index("MUNICIPALITY TYPE")
-        i_name = header.index("MUNICIPALITY NAME")
-        i_county = header.index("COUNTY NAME")
-        i_ratio = header.index("AGGREGATE RATIO")
-    except ValueError as e:
-        raise RuntimeError(f"sumagg header changed: {header}") from e
+
+    def col(predicate, what):
+        hits = [i for i, h in enumerate(header) if predicate(h)]
+        if len(hits) != 1:
+            raise RuntimeError(f"sumagg header changed — cannot locate {what}: {header}")
+        return hits[0]
+
+    # Located by content, tolerant of DOR's own typos (the 2025 edition ships
+    # "MINUCIPALITY NAME"); ambiguity or absence still fails loudly.
+    i_type = col(lambda h: "TYPE" in h and "CIPALITY" in h, "municipality type")
+    i_name = col(lambda h: h.endswith("NAME") and "CIPALITY" in h, "municipality name")
+    i_county = col(lambda h: h == "COUNTY NAME", "county name")
+    i_ratio = col(lambda h: h == "AGGREGATE RATIO", "aggregate ratio")
 
     out: dict[str, float] = {}
     want = f"{county_name.upper()} COUNTY"
@@ -125,6 +133,24 @@ def run() -> None:
               f"{delta:>+8.3f} {residual:>+9.3f}{flag}")
     print(f"\nshared drift (county median delta): {shared:+.3f}")
     print(f"{flagged} of {len(rows)} flagged (|residual| > {WARN_RESIDUAL} or missing).")
+
+    # Aggregate-only export for the widget's "DOR level" column (committable).
+    export = {
+        "generated": date.today().isoformat(),
+        "study_year": config.STUDY_YEAR,
+        "source": SUMAGG_URL,
+        "shared_drift": round(shared, 3),
+        "warn_residual": WARN_RESIDUAL,
+        "municipalities": [
+            {"name": m["name"], "dor_ratio": d,
+             "delta": round(delta, 3) if delta is not None else None,
+             "residual": round(delta - shared, 3) if delta is not None else None,
+             "flag": delta is None or abs(delta - shared) > WARN_RESIDUAL}
+            for m, d, delta in rows
+        ],
+    }
+    config.CROSSCHECK_JSON.write_text(json.dumps(export, indent=1), encoding="utf-8")
+    print(f"Wrote {config.CROSSCHECK_JSON}")
 
 
 if __name__ == "__main__":

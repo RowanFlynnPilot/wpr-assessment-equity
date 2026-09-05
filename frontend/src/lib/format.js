@@ -24,6 +24,12 @@ export function pctVsPar(ratio, digits = 1) {
   return `${sign}${(Math.abs(n) * 100).toFixed(digits)}%`;
 }
 
+// "11.3–13.1" — a [lo, hi] interval at a fixed precision.
+export function range(ci, digits = 1) {
+  if (!Array.isArray(ci) || ci.length !== 2) return "";
+  return `${fixed(ci[0], digits)}–${fixed(ci[1], digits)}`;
+}
+
 // Fixed-point with a typographic minus (−, not the ASCII hyphen toFixed emits).
 export function fixed(n, digits = 1) {
   return (n < 0 ? "−" : "") + Math.abs(n).toFixed(digits);

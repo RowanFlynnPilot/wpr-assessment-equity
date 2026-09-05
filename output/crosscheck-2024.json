@@ -1,0 +1,65 @@
+{
+ "generated": "2026-09-05",
+ "study_year": 2024,
+ "source": "https://www.revenue.wi.gov/SLFReportscotvc/2024sumagg.xlsx",
+ "shared_drift": -0.103,
+ "warn_residual": 0.05,
+ "municipalities": [
+  {
+   "name": "CITY OF WAUSAU",
+   "dor_ratio": 0.978927199,
+   "delta": -0.047,
+   "residual": 0.056,
+   "flag": true
+  },
+  {
+   "name": "VILLAGE OF WESTON",
+   "dor_ratio": 1.002263001,
+   "delta": -0.113,
+   "residual": -0.01,
+   "flag": false
+  },
+  {
+   "name": "VILLAGE OF RIB MOUNTAIN",
+   "dor_ratio": 0.704947689,
+   "delta": -0.087,
+   "residual": 0.016,
+   "flag": false
+  },
+  {
+   "name": "VILLAGE OF KRONENWETTER",
+   "dor_ratio": 0.776269768,
+   "delta": -0.094,
+   "residual": 0.009,
+   "flag": false
+  },
+  {
+   "name": "VILLAGE OF ROTHSCHILD",
+   "dor_ratio": 1.007586073,
+   "delta": -0.123,
+   "residual": -0.02,
+   "flag": false
+  },
+  {
+   "name": "CITY OF MOSINEE",
+   "dor_ratio": 0.735507551,
+   "delta": -0.033,
+   "residual": 0.071,
+   "flag": true
+  },
+  {
+   "name": "VILLAGE OF SPENCER",
+   "dor_ratio": 0.873869387,
+   "delta": -0.112,
+   "residual": -0.009,
+   "flag": false
+  },
+  {
+   "name": "CITY OF SCHOFIELD",
+   "dor_ratio": 1.001812516,
+   "delta": -0.113,
+   "residual": -0.01,
+   "flag": false
+  }
+ ]
+}

@@ -113,6 +113,15 @@ export function Definitions({ pooled, reference }) {
               is the cheapest tenth of homes sold; decile 10 the most expensive tenth.
             </dd>
           </div>
+          <div className="gloss-item">
+            <dt>95% confidence interval <span className="gloss-val">the small ranges beside COD and PRD</span></dt>
+            <dd>
+              A year of sales is a sample, not a census. The interval is the range a
+              statistic would plausibly land in if a different set of homes had happened
+              to sell — computed by re-drawing the sample 1,000 times. A wide interval
+              (small communities) means "read this loosely."
+            </dd>
+          </div>
         </dl>
       </details>
     </section>

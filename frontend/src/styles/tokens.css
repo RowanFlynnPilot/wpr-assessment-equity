@@ -9,6 +9,8 @@
   --wpr-paper: #ffffff; /* page ground — the site is pure white */
   --wpr-tint: #f7f7f5; /* table headers / zebra tint on the white ground */
   --wpr-ink: #111111; /* site body/headline color (rgb 17,17,17) */
+  --wpr-muted: #666460; /* secondary text — 5.7:1 on white (the old #888/#999
+                           labels were 3.5:1 and 2.8:1, below WCAG AA) */
   --wpr-rule: #dcdcda; /* hairline rules / table borders */
   --wpr-slate: #32373c; /* masthead text/rule color */
   --wpr-red: #dd3333; /* the paper's accent red (typewriter roundel) */

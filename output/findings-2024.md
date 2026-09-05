@@ -1,6 +1,6 @@
 # Assessment equity in Marathon County — 2024 sales ratio study
 
-*Generated 2026-07-04 by `wpr-assessment-equity`. Aggregate statistics only — see CLAUDE.md for methodology and privacy policy.*
+*Generated 2026-09-05 by `wpr-assessment-equity`. Aggregate statistics only — see CLAUDE.md for methodology and privacy policy.*
 
 ## Sample construction
 
@@ -24,24 +24,26 @@
 
 Municipalities with fewer than 30 trimmed sales are pooled but not reported standalone. COD reference for single-family residential: <= 15. PRD band 0.98–1.03. PRB band ±0.05.
 
-| Municipality | n | median ratio | COD | PRD | PRB (t) | reading |
-|---|---|---|---|---|---|---|
-| CITY OF WAUSAU | 504 | 0.932 | 11.0 | 1.000 | +0.002 (0.3) | within IAAO equity bands |
-| VILLAGE OF WESTON | 153 | 0.889 | 9.8 | 1.005 | +0.023 (1.2) | within IAAO equity bands |
-| VILLAGE OF RIB MOUNTAIN | 93 | 0.618 | 13.9 | 1.020 | -0.030 (-1.3) | within IAAO equity bands |
-| VILLAGE OF KRONENWETTER | 82 | 0.682 | 11.6 | 1.010 | -0.009 (-0.3) | within IAAO equity bands |
-| VILLAGE OF ROTHSCHILD | 80 | 0.885 | 11.4 | 1.012 | +0.023 (0.8) | within IAAO equity bands |
-| CITY OF MOSINEE | 50 | 0.703 | 16.0 | 1.032 | -0.048 (-1.1) | REGRESSIVE — lower-priced homes carry proportionally higher assessments |
-| VILLAGE OF SPENCER | 37 | 0.762 | 9.7 | 1.009 | +0.006 (0.2) | within IAAO equity bands |
-| CITY OF SCHOFIELD | 30 | 0.889 | 12.0 | 0.984 | +0.056 (1.8) | within IAAO equity bands |
+| Municipality | n | median ratio | COD (95% CI) | PRD (95% CI) | PRB (t) | eff. tax rate | reading |
+|---|---|---|---|---|---|---|---|
+| CITY OF WAUSAU | 504 | 0.932 | 11.0 (10.2–11.8) | 1.000 (0.991–1.008) | +0.002 (0.3) | 1.69% | within IAAO equity bands |
+| VILLAGE OF WESTON | 153 | 0.889 | 9.8 (8.3–11.1) | 1.005 (0.999–1.012) | +0.023 (1.2) | 1.34% | within IAAO equity bands |
+| VILLAGE OF RIB MOUNTAIN | 93 | 0.618 | 13.9 (11.4–16.0) | 1.020 (0.997–1.045) | -0.030 (-1.3) | 1.08% | within IAAO equity bands |
+| VILLAGE OF KRONENWETTER | 82 | 0.682 | 11.6 (9.5–13.6) | 1.010 (0.999–1.022) | -0.009 (-0.3) | 1.08% | within IAAO equity bands |
+| VILLAGE OF ROTHSCHILD | 80 | 0.885 | 11.4 (9.2–13.4) | 1.012 (0.993–1.034) | +0.023 (0.8) | 1.25% | within IAAO equity bands |
+| CITY OF MOSINEE | 50 | 0.703 | 16.0 (12.1–19.4) | 1.032 (1.010–1.055) | -0.048 (-1.1) | 1.30% | REGRESSIVE — lower-priced homes carry proportionally higher assessments · COD above 15 |
+| VILLAGE OF SPENCER | 37 | 0.762 | 9.7 (7.0–11.8) | 1.009 (0.994–1.021) | +0.006 (0.2) | 1.38% | within IAAO equity bands |
+| CITY OF SCHOFIELD | 30 | 0.889 | 12.0 (9.1–14.7) | 0.984 (0.968–1.002) | +0.056 (1.8) | 1.23% | within IAAO equity bands |
+
+95% CIs are percentile bootstraps (1,000 resamples, fixed seed). Eff. tax rate = median net tax ÷ sale price.
 
 ## County pooled (municipality-normalized)
 
 Each sale's ratio is divided by its municipality's median ratio before pooling, so this compares equity, not revaluation timing.
 
 - n = 1,409
-- COD = 13.6
-- PRD = 1.015
+- COD = 13.6 (95% CI 12.7–14.5)
+- PRD = 1.015 (95% CI 1.006–1.023)
 - PRB = -0.011 (SE 0.007, t -1.6)
 - **Reading: within IAAO equity bands**
 
@@ -60,7 +62,7 @@ Each sale's ratio is divided by its municipality's median ratio before pooling, 
 | 9 | 141 | $340,000–$425,000 | $375,000 | 1.006 |
 | 10 | 141 | $426,000–$1,200,000 | $525,000 | 1.004 |
 
-Bottom-decile homes are assessed at a ratio **+7.6%** relative to top-decile homes.
+Bottom-decile homes are assessed at a ratio **+7.6%** relative to top-decile homes. Bottom-decile median normalized ratio 1.080 (95% CI 1.039–1.143).
 
 ## Property-tax dollars (tax-shift illustration)
 

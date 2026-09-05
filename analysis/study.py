@@ -84,19 +84,39 @@ def compute() -> dict:
             continue
         p_v = ratios.prd(pairs)
         b_v = ratios.prb(pairs)
+        cod_lo, cod_hi = ratios.bootstrap_ci(pairs, ratios.cod)
+        prd_lo, prd_hi = ratios.bootstrap_ci(pairs, ratios.prd)
+        etrs = [t / p for _, p, t in trimmed[muni] if t > 0]
         muni_rows.append({
             "name": muni,
             "n": len(pairs),
             "median_ratio": round(ratios.median_ratio(pairs), 3),
             "cod": round(ratios.cod(pairs), 1),
+            "cod_ci": [round(cod_lo, 1), round(cod_hi, 1)],
             "prd": round(p_v, 3),
+            "prd_ci": [round(prd_lo, 3), round(prd_hi, 3)],
             "prb": round(b_v.coefficient, 3),
             "prb_t": round(b_v.t_stat, 1),
+            "median_etr": round(statistics.median(etrs), 5) if etrs else None,
             "reading": _verdict(p_v, b_v),
+            # Uniformity is reported beside the equity verdict, not folded into
+            # it: a COD over the IAAO ceiling means an assessment lottery even
+            # when the price tilt is inside the bands.
+            "uniformity_ok": ratios.cod(pairs) <= config.IAAO_COD_MAX_SFR,
         })
 
     prd_v = ratios.prd(norm_pooled)
     prb_v = ratios.prb(norm_pooled)
+    pooled_cod_ci = ratios.bootstrap_ci(norm_pooled, ratios.cod)
+    pooled_prd_ci = ratios.bootstrap_ci(norm_pooled, ratios.prd)
+    # Bottom-decile deviation with sampling uncertainty: resample sales jointly
+    # with their municipality, re-cut deciles, take decile 1's median.
+    tagged = list(zip(pooled_pairs, pooled_munis))
+    bottom_ci = ratios.bootstrap_ci(
+        tagged,
+        lambda rs: ratios.decile_table([r[0] for r in rs], muni_median,
+                                       [r[1] for r in rs], config.N_DECILES)[0]["median_norm_ratio"],
+    )
     deciles = [
         {**row,
          "median_price": int(row["median_price"]),
@@ -146,14 +166,18 @@ def compute() -> dict:
         "pooled": {
             "n": len(norm_pooled),
             "cod": round(ratios.cod(norm_pooled), 1),
+            "cod_ci": [round(pooled_cod_ci[0], 1), round(pooled_cod_ci[1], 1)],
             "prd": round(prd_v, 3),
+            "prd_ci": [round(pooled_prd_ci[0], 3), round(pooled_prd_ci[1], 3)],
             "prb": round(prb_v.coefficient, 3),
             "prb_se": round(prb_v.std_error, 3),
             "prb_t": round(prb_v.t_stat, 1),
             "reading": _verdict(prd_v, prb_v),
+            "uniformity_ok": ratios.cod(norm_pooled) <= config.IAAO_COD_MAX_SFR,
         },
         "deciles": deciles,
         "bottom_vs_top_pct": round(gap, 1) if gap is not None else None,
+        "bottom_decile_ci": [round(bottom_ci[0], 3), round(bottom_ci[1], 3)],
         "tax_shift": tax_shift,
     }
 
@@ -185,12 +209,19 @@ def render_md(f: dict) -> str:
       f"<= {ref['cod_max_sfr']:.0f}. PRD band {ref['prd_band'][0]}–"
       f"{ref['prd_band'][1]}. PRB band ±0.05.")
     w("")
-    w("| Municipality | n | median ratio | COD | PRD | PRB (t) | reading |")
-    w("|---|---|---|---|---|---|---|")
+    w("| Municipality | n | median ratio | COD (95% CI) | PRD (95% CI) | PRB (t) | eff. tax rate | reading |")
+    w("|---|---|---|---|---|---|---|---|")
     for m in f["municipalities"]:
+        etr = f"{m['median_etr'] * 100:.2f}%" if m.get("median_etr") is not None else "—"
+        reading = m["reading"] + ("" if m["uniformity_ok"]
+                                  else f" · COD above {ref['cod_max_sfr']:.0f}")
         w(f"| {m['name']} | {m['n']} | {m['median_ratio']:.3f} "
-          f"| {m['cod']:.1f} | {m['prd']:.3f} "
-          f"| {m['prb']:+.3f} ({m['prb_t']:.1f}) | {m['reading']} |")
+          f"| {m['cod']:.1f} ({m['cod_ci'][0]:.1f}–{m['cod_ci'][1]:.1f}) "
+          f"| {m['prd']:.3f} ({m['prd_ci'][0]:.3f}–{m['prd_ci'][1]:.3f}) "
+          f"| {m['prb']:+.3f} ({m['prb_t']:.1f}) | {etr} | {reading} |")
+    w("")
+    w("95% CIs are percentile bootstraps (1,000 resamples, fixed seed). "
+      "Eff. tax rate = median net tax ÷ sale price.")
     w("")
 
     p = f["pooled"]
@@ -200,8 +231,8 @@ def render_md(f: dict) -> str:
       "pooling, so this compares equity, not revaluation timing.")
     w("")
     w(f"- n = {p['n']:,}")
-    w(f"- COD = {p['cod']:.1f}")
-    w(f"- PRD = {p['prd']:.3f}")
+    w(f"- COD = {p['cod']:.1f} (95% CI {p['cod_ci'][0]:.1f}–{p['cod_ci'][1]:.1f})")
+    w(f"- PRD = {p['prd']:.3f} (95% CI {p['prd_ci'][0]:.3f}–{p['prd_ci'][1]:.3f})")
     w(f"- PRB = {p['prb']:+.3f} (SE {p['prb_se']:.3f}, t {p['prb_t']:.1f})")
     w(f"- **Reading: {p['reading']}**")
     w("")
@@ -217,7 +248,9 @@ def render_md(f: dict) -> str:
     if f["bottom_vs_top_pct"] is not None:
         w("")
         w(f"Bottom-decile homes are assessed at a ratio **{f['bottom_vs_top_pct']:+.1f}%** "
-          f"relative to top-decile homes.")
+          f"relative to top-decile homes. Bottom-decile median normalized ratio "
+          f"{f['deciles'][0]['median_norm_ratio']:.3f} (95% CI "
+          f"{f['bottom_decile_ci'][0]:.3f}–{f['bottom_decile_ci'][1]:.3f}).")
     w("")
 
     ts = f.get("tax_shift") or {}
@@ -260,13 +293,28 @@ def render_md(f: dict) -> str:
     return "\n".join(lines)
 
 
+def write_index() -> dict:
+    """output/index.json lists every study year present (from the per-year
+    feed files) and the latest — the widget's entry point."""
+    years = sorted(
+        int(p.stem.split("-")[1]) for p in config.OUTPUT_DIR.glob("findings-*.json")
+    )
+    if not years:
+        raise RuntimeError("no findings-<year>.json in output/ — nothing to index")
+    index = {"years": years, "latest": years[-1], "feed": "findings-{year}.json"}
+    config.INDEX_JSON.write_text(json.dumps(index, indent=1), encoding="utf-8")
+    return index
+
+
 def run() -> None:
     findings = compute()
     config.OUTPUT_DIR.mkdir(exist_ok=True)
     config.FINDINGS_MD.write_text(render_md(findings), encoding="utf-8")
     config.FINDINGS_JSON.write_text(json.dumps(findings, indent=1), encoding="utf-8")
+    index = write_index()
     print(f"Wrote {config.FINDINGS_MD}")
     print(f"Wrote {config.FINDINGS_JSON}")
+    print(f"Wrote {config.INDEX_JSON} (years {index['years']}, latest {index['latest']})")
 
 
 if __name__ == "__main__":

@@ -71,6 +71,48 @@
   padding-bottom: 1rem;
   margin-bottom: 1.5rem;
 }
+.masthead-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+/* Segmented year switch (same control as the transactions widget's toggles). */
+.seg {
+  display: inline-flex;
+  border: 1px solid var(--wpr-rule);
+  margin-top: 0.6rem;
+  flex: none;
+}
+.seg button {
+  font-family: var(--font-ui);
+  font-weight: 600;
+  font-size: 0.85rem;
+  padding: 0.35rem 0.85rem;
+  background: #fff;
+  color: var(--wpr-muted);
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.seg button + button {
+  border-left: 1px solid var(--wpr-rule);
+}
+.seg button.active {
+  background: var(--wpr-teal);
+  color: #fff;
+}
+.seg button:focus-visible {
+  outline: 2px solid var(--wpr-ink);
+  outline-offset: -2px;
+}
+/* A year switch holds the previous render dimmed until the next feed lands —
+   no skeleton flash, no layout jump. */
+.study.is-loading {
+  opacity: 0.55;
+  transition: opacity 0.2s ease;
+}
 .masthead h1 {
   font-family: var(--font-display);
   font-weight: 700;
@@ -166,7 +208,7 @@ h2 {
 .gloss-hint {
   font-family: var(--font-ui);
   font-size: 0.8rem;
-  color: #777;
+  color: var(--wpr-muted);
 }
 .gloss-list {
   margin: 0;
@@ -205,13 +247,65 @@ h2 {
 /* --- Overall reading banner ------------------------------------------------ */
 .reading {
   display: flex;
-  align-items: flex-start;
-  gap: 1rem;
+  align-items: stretch;
+  gap: 1.25rem;
   flex-wrap: wrap;
   margin: 1.5rem 0;
   padding: 1rem 1.1rem;
   background: var(--wpr-tint);
   border-left: 4px solid var(--wpr-teal);
+}
+/* The one hero figure on the page: the headline deviation, house data face. */
+.reading-hero {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  flex: 0 0 auto;
+  padding-right: 1.25rem;
+  border-right: 1px solid var(--wpr-rule);
+  min-width: 11rem;
+}
+.reading-hero-num {
+  font-family: var(--font-data);
+  font-weight: 600;
+  font-size: clamp(2.2rem, 5vw, 3rem);
+  line-height: 1;
+  color: var(--wpr-ink);
+}
+.reading-hero-label {
+  font-family: var(--font-ui);
+  font-size: 0.78rem;
+  line-height: 1.35;
+  color: var(--wpr-muted);
+  margin-top: 0.4rem;
+}
+.reading-body {
+  flex: 1 1 30ch;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 0.5rem 0.6rem;
+}
+.reading-body .reading-text {
+  flex-basis: 100%;
+}
+.reading-badge.warn {
+  background: var(--wpr-gold);
+}
+.reading-badge.sm.warn {
+  background: #f6e9cf;
+  color: #7a5a12;
+}
+.ci {
+  font-family: var(--font-data);
+  font-weight: 400;
+  font-size: 0.7em;
+  color: var(--wpr-muted);
+}
+.muni-table .ci {
+  display: block;
+  font-size: 0.68rem;
+  line-height: 1.2;
 }
 .reading-badge {
   font-family: var(--font-ui);
@@ -262,12 +356,15 @@ h2 {
   box-shadow: var(--shadow);
   padding: 1rem 1.1rem 0.9rem;
 }
+.kpi-card.kpi-warn {
+  border-top-color: var(--wpr-gold);
+}
 .kpi-label {
   font-family: var(--font-ui);
   font-size: 0.7rem;
   text-transform: uppercase;
   letter-spacing: 0.07em;
-  color: #777;
+  color: var(--wpr-muted);
 }
 .kpi-value {
   font-family: var(--font-data);
@@ -280,7 +377,7 @@ h2 {
 .kpi-sub {
   font-family: var(--font-ui);
   font-size: 0.74rem;
-  color: #888;
+  color: var(--wpr-muted);
   margin-top: 0.35rem;
 }
 .kpi-plain {
@@ -322,7 +419,7 @@ h2 {
 .chart-hint {
   font-weight: 400;
   font-size: 0.75rem;
-  color: #999;
+  color: var(--wpr-muted);
 }
 .swatch {
   display: inline-block;
@@ -362,7 +459,7 @@ h2 {
 }
 .chart-tip-sub {
   font-size: 0.76rem;
-  color: #777;
+  color: var(--wpr-muted);
   margin-top: 0.2rem;
   max-width: 30ch;
 }
@@ -373,6 +470,49 @@ h2 {
 }
 .decile-gap b {
   font-family: var(--font-data);
+}
+/* Table twin of the chart (a11y + print); collapsed by default. */
+.chart-table {
+  margin-top: 0.5rem;
+}
+.chart-table > summary {
+  font-family: var(--font-ui);
+  font-size: 0.82rem;
+  color: var(--wpr-teal);
+  cursor: pointer;
+  margin-bottom: 0.5rem;
+}
+.chart-table > summary:focus-visible {
+  outline: 2px solid var(--wpr-ink);
+  outline-offset: 2px;
+}
+
+/* --- Year over year ----------------------------------------------------------- */
+.delta {
+  font-family: var(--font-data);
+  font-weight: 600;
+}
+.delta.good {
+  color: var(--wpr-up);
+}
+.delta.bad {
+  color: var(--wpr-down);
+}
+.delta.flat {
+  color: var(--wpr-muted);
+}
+.yoy-note {
+  color: var(--wpr-muted);
+  font-size: 0.82rem;
+}
+.yoy-jumps {
+  margin-top: 0.85rem;
+}
+.table-foot {
+  font-size: 0.78rem;
+  color: var(--wpr-muted);
+  margin: 0.5rem 0 0;
+  max-width: 75ch;
 }
 
 /* --- Tables ---------------------------------------------------------------------- */
@@ -419,11 +559,100 @@ h2 {
   background: #e9f3f1;
 }
 .muni-table .excl td {
-  color: #886;
+  color: var(--wpr-muted);
 }
 .muni-table .total td {
   font-weight: 700;
   border-top: 2px solid var(--wpr-ink);
+}
+.reading-cell {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+/* Narrow screens: the 9-column municipality table (and the year-over-year and
+   chart-twin tables) collapse into labelled cards — every field stays visible,
+   nothing hides behind a horizontal scroll. data-label on each <td> supplies
+   the field name via ::before. */
+@media (max-width: 760px) {
+  .munis .table-wrap,
+  .yoy .table-wrap,
+  .chart-table .table-wrap {
+    overflow-x: visible;
+    border: none;
+    background: transparent;
+  }
+  .munis thead,
+  .yoy thead,
+  .chart-table thead {
+    display: none;
+  }
+  .munis .muni-table,
+  .munis .muni-table tbody,
+  .munis .muni-table tr,
+  .munis .muni-table td,
+  .yoy .muni-table,
+  .yoy .muni-table tbody,
+  .yoy .muni-table tr,
+  .yoy .muni-table td,
+  .chart-table .muni-table,
+  .chart-table .muni-table tbody,
+  .chart-table .muni-table tr,
+  .chart-table .muni-table td {
+    display: block;
+    width: 100%;
+  }
+  .munis .muni-table tr,
+  .yoy .muni-table tr,
+  .chart-table .muni-table tr {
+    border: 1px solid var(--wpr-rule);
+    background: #fff;
+    margin-bottom: 0.75rem;
+    padding: 0.3rem 0.85rem;
+  }
+  .munis .muni-table td,
+  .yoy .muni-table td,
+  .chart-table .muni-table td {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 1rem;
+    padding: 0.35rem 0;
+    text-align: right;
+    border-bottom: 1px dotted var(--wpr-rule);
+  }
+  .munis .muni-table tr td:last-child,
+  .yoy .muni-table tr td:last-child,
+  .chart-table .muni-table tr td:last-child {
+    border-bottom: none;
+  }
+  .munis .muni-table td::before,
+  .yoy .muni-table td::before,
+  .chart-table .muni-table td::before {
+    content: attr(data-label);
+    flex: none;
+    font-family: var(--font-ui);
+    font-weight: 600;
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--wpr-slate);
+    text-align: left;
+  }
+  .munis .muni-table tbody tr:hover td {
+    background: transparent;
+  }
+  .muni-name {
+    font-weight: 700;
+  }
+  .muni-table .ci {
+    display: inline;
+    margin-left: 0.35rem;
+  }
+  .reading-cell {
+    justify-content: flex-end;
+  }
 }
 
 /* --- Sample details ------------------------------------------------------------ */
@@ -452,23 +681,58 @@ h2 {
 .sample-n {
   font-family: var(--font-ui);
   font-size: 0.8rem;
-  color: #777;
+  color: var(--wpr-muted);
 }
 
 /* --- States / footer -------------------------------------------------------------- */
 .empty {
   padding: 2rem;
   text-align: center;
-  color: #777;
+  color: var(--wpr-muted);
+}
+.empty-detail {
+  display: block;
+  font-family: var(--font-data);
+  font-size: 0.75rem;
+  margin-top: 0.4rem;
 }
 .colophon {
   margin-top: 2.5rem;
   padding-top: 1rem;
   border-top: 1px solid var(--wpr-rule);
   font-size: 0.8rem;
-  color: #777;
+  color: var(--wpr-muted);
   max-width: 78ch;
   line-height: 1.6;
+}
+
+/* --- Print ------------------------------------------------------------------------- */
+@media print {
+  .page {
+    max-width: none;
+    padding: 0;
+  }
+  .seg,
+  .chart-table > summary {
+    display: none;
+  }
+  .chart-table,
+  .gloss details,
+  .sample details {
+    /* Expand collapsed content so the printout is complete. */
+    display: block;
+  }
+  .chart-table[open] > *,
+  .chart-table > *:not(summary) {
+    display: block;
+  }
+  .kpi-card,
+  .explain-card,
+  .chart,
+  .table-wrap {
+    box-shadow: none;
+    break-inside: avoid;
+  }
 }
 
 /* --- Responsive --------------------------------------------------------------------- */
