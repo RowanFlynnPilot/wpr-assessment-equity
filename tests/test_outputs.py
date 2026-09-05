@@ -63,6 +63,15 @@ def test_feed_has_widget_contract(feed):
 
 
 @pytest.mark.parametrize("path", sorted(OUTPUT.glob("*.json")), ids=lambda p: p.name)
+def test_feed_is_plain_utf8_json(path):
+    # Browsers' JSON.parse rejects a byte-order mark. PowerShell 5.1's
+    # `Set-Content -Encoding utf8` writes one — always let the pipeline
+    # (Python) write feed files.
+    assert not path.read_bytes().startswith(b"\xef\xbb\xbf"), \
+        f"{path.name} starts with a UTF-8 BOM — rewrite it with the pipeline, not PowerShell"
+
+
+@pytest.mark.parametrize("path", sorted(OUTPUT.glob("*.json")), ids=lambda p: p.name)
 def test_public_feeds_are_aggregate_only(path):
     text = path.read_text(encoding="utf-8")
     assert not PARCEL_ID.search(text), f"{path.name} contains a parcel-number-shaped value"
