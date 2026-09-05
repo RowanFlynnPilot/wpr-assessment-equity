@@ -1,0 +1,427 @@
+{
+ "schema": 2,
+ "generated": "2026-09-05",
+ "county": "Marathon",
+ "study_year": 2025,
+ "min_sale_price": 10000,
+ "reference": {
+  "cod_max_sfr": 15.0,
+  "prd_band": [
+   0.98,
+   1.03
+  ],
+  "prb_band": [
+   -0.05,
+   0.05
+  ],
+  "muni_min_n": 30
+ },
+ "sample": {
+  "waterfall": [
+   {
+    "step": "raw RETR rows",
+    "remaining": 5227
+   },
+   {
+    "step": "conveyance is Sale",
+    "remaining": 2605
+   },
+   {
+    "step": "arm's length (no grantor/grantee relationship)",
+    "remaining": 2449
+   },
+   {
+    "step": "no fee exemption claimed",
+    "remaining": 2329
+   },
+   {
+    "step": "entire parcel transferred",
+    "remaining": 2270
+   },
+   {
+    "step": "single family use",
+    "remaining": 1907
+   },
+   {
+    "step": "sale price >= $10,000",
+    "remaining": 1902
+   },
+   {
+    "step": "recorded in 2025",
+    "remaining": 1902
+   }
+  ],
+  "exclusions": [
+   {
+    "step": "no parcel match",
+    "excluded": 37
+   },
+   {
+    "step": "parcel not pure class 1",
+    "excluded": 243
+   },
+   {
+    "step": "acreage mismatch (multi-parcel fingerprint)",
+    "excluded": 19
+   },
+   {
+    "step": "IQR ratio trimming (within municipality)",
+    "excluded": 150
+   }
+  ],
+  "final_n": 1453
+ },
+ "municipalities": [
+  {
+   "name": "CITY OF WAUSAU",
+   "n": 508,
+   "median_ratio": 0.866,
+   "cod": 12.2,
+   "cod_ci": [
+    11.3,
+    13.1
+   ],
+   "prd": 1.009,
+   "prd_ci": [
+    1.002,
+    1.017
+   ],
+   "prb": -0.006,
+   "prb_t": -0.6,
+   "median_etr": 0.01549,
+   "reading": "within IAAO equity bands",
+   "uniformity_ok": true
+  },
+  {
+   "name": "VILLAGE OF WESTON",
+   "n": 145,
+   "median_ratio": 0.834,
+   "cod": 11.3,
+   "cod_ci": [
+    9.8,
+    12.9
+   ],
+   "prd": 1.014,
+   "prd_ci": [
+    1.006,
+    1.022
+   ],
+   "prb": -0.022,
+   "prb_t": -1.3,
+   "median_etr": 0.01246,
+   "reading": "within IAAO equity bands",
+   "uniformity_ok": true
+  },
+  {
+   "name": "VILLAGE OF RIB MOUNTAIN",
+   "n": 95,
+   "median_ratio": 0.926,
+   "cod": 9.5,
+   "cod_ci": [
+    7.9,
+    11.1
+   ],
+   "prd": 1.01,
+   "prd_ci": [
+    0.998,
+    1.023
+   ],
+   "prb": -0.003,
+   "prb_t": -0.2,
+   "median_etr": 0.01066,
+   "reading": "within IAAO equity bands",
+   "uniformity_ok": true
+  },
+  {
+   "name": "VILLAGE OF KRONENWETTER",
+   "n": 91,
+   "median_ratio": 0.635,
+   "cod": 10.1,
+   "cod_ci": [
+    8.3,
+    12.0
+   ],
+   "prd": 1.002,
+   "prd_ci": [
+    0.993,
+    1.011
+   ],
+   "prb": 0.04,
+   "prb_t": 1.5,
+   "median_etr": 0.01037,
+   "reading": "within IAAO equity bands",
+   "uniformity_ok": true
+  },
+  {
+   "name": "VILLAGE OF ROTHSCHILD",
+   "n": 75,
+   "median_ratio": 0.828,
+   "cod": 10.1,
+   "cod_ci": [
+    8.3,
+    11.7
+   ],
+   "prd": 1.01,
+   "prd_ci": [
+    1.001,
+    1.021
+   ],
+   "prb": -0.019,
+   "prb_t": -0.7,
+   "median_etr": 0.01259,
+   "reading": "within IAAO equity bands",
+   "uniformity_ok": true
+  },
+  {
+   "name": "CITY OF MOSINEE",
+   "n": 71,
+   "median_ratio": 0.65,
+   "cod": 17.5,
+   "cod_ci": [
+    13.9,
+    20.7
+   ],
+   "prd": 1.01,
+   "prd_ci": [
+    0.99,
+    1.035
+   ],
+   "prb": 0.006,
+   "prb_t": 0.2,
+   "median_etr": 0.01256,
+   "reading": "within IAAO equity bands",
+   "uniformity_ok": false
+  },
+  {
+   "name": "CITY OF SCHOFIELD",
+   "n": 33,
+   "median_ratio": 0.833,
+   "cod": 12.8,
+   "cod_ci": [
+    9.4,
+    15.2
+   ],
+   "prd": 1.009,
+   "prd_ci": [
+    0.987,
+    1.031
+   ],
+   "prb": -0.002,
+   "prb_t": -0.1,
+   "median_etr": 0.01323,
+   "reading": "within IAAO equity bands",
+   "uniformity_ok": true
+  },
+  {
+   "name": "VILLAGE OF SPENCER",
+   "n": 33,
+   "median_ratio": 0.776,
+   "cod": 13.0,
+   "cod_ci": [
+    9.8,
+    16.1
+   ],
+   "prd": 1.018,
+   "prd_ci": [
+    0.996,
+    1.045
+   ],
+   "prb": -0.064,
+   "prb_t": -1.7,
+   "median_etr": 0.01516,
+   "reading": "within IAAO equity bands",
+   "uniformity_ok": true
+  }
+ ],
+ "pooled": {
+  "n": 1453,
+  "cod": 14.1,
+  "cod_ci": [
+   13.2,
+   15.1
+  ],
+  "prd": 1.019,
+  "prd_ci": [
+   1.011,
+   1.027
+  ],
+  "prb": -0.013,
+  "prb_se": 0.007,
+  "prb_t": -1.8,
+  "reading": "within IAAO equity bands",
+  "uniformity_ok": true
+ },
+ "deciles": [
+  {
+   "decile": 1,
+   "n": 145,
+   "price_min": 14000,
+   "price_max": 125000,
+   "median_price": 85000,
+   "median_norm_ratio": 1.121
+  },
+  {
+   "decile": 2,
+   "n": 145,
+   "price_min": 125000,
+   "price_max": 160000,
+   "median_price": 145000,
+   "median_norm_ratio": 1.038
+  },
+  {
+   "decile": 3,
+   "n": 145,
+   "price_min": 160000,
+   "price_max": 190000,
+   "median_price": 175000,
+   "median_norm_ratio": 1.0
+  },
+  {
+   "decile": 4,
+   "n": 146,
+   "price_min": 190000,
+   "price_max": 217000,
+   "median_price": 201250,
+   "median_norm_ratio": 0.965
+  },
+  {
+   "decile": 5,
+   "n": 145,
+   "price_min": 217000,
+   "price_max": 241900,
+   "median_price": 230000,
+   "median_norm_ratio": 0.981
+  },
+  {
+   "decile": 6,
+   "n": 145,
+   "price_min": 242000,
+   "price_max": 275000,
+   "median_price": 256000,
+   "median_norm_ratio": 0.971
+  },
+  {
+   "decile": 7,
+   "n": 146,
+   "price_min": 275000,
+   "price_max": 315000,
+   "median_price": 292000,
+   "median_norm_ratio": 1.0
+  },
+  {
+   "decile": 8,
+   "n": 145,
+   "price_min": 315000,
+   "price_max": 357900,
+   "median_price": 334900,
+   "median_norm_ratio": 0.995
+  },
+  {
+   "decile": 9,
+   "n": 145,
+   "price_min": 357900,
+   "price_max": 439000,
+   "median_price": 382500,
+   "median_norm_ratio": 1.0
+  },
+  {
+   "decile": 10,
+   "n": 146,
+   "price_min": 439900,
+   "price_max": 1475000,
+   "median_price": 530000,
+   "median_norm_ratio": 0.965
+  }
+ ],
+ "bottom_vs_top_pct": 16.2,
+ "bottom_decile_ci": [
+  1.067,
+  1.225
+ ],
+ "tax_shift": {
+  "n": 1453,
+  "overall_etr": 0.01252,
+  "deciles": [
+   {
+    "decile": 1,
+    "n": 145,
+    "median_price": 85000,
+    "median_tax": 1226,
+    "median_etr": 0.01466,
+    "median_shift": 108
+   },
+   {
+    "decile": 2,
+    "n": 145,
+    "median_price": 145000,
+    "median_tax": 2089,
+    "median_etr": 0.01465,
+    "median_shift": 320
+   },
+   {
+    "decile": 3,
+    "n": 145,
+    "median_price": 175000,
+    "median_tax": 2426,
+    "median_etr": 0.01373,
+    "median_shift": 206
+   },
+   {
+    "decile": 4,
+    "n": 146,
+    "median_price": 201250,
+    "median_tax": 2639,
+    "median_etr": 0.01303,
+    "median_shift": 99
+   },
+   {
+    "decile": 5,
+    "n": 145,
+    "median_price": 230000,
+    "median_tax": 2903,
+    "median_etr": 0.01279,
+    "median_shift": 61
+   },
+   {
+    "decile": 6,
+    "n": 145,
+    "median_price": 256000,
+    "median_tax": 3122,
+    "median_etr": 0.01204,
+    "median_shift": -118
+   },
+   {
+    "decile": 7,
+    "n": 146,
+    "median_price": 292000,
+    "median_tax": 3695,
+    "median_etr": 0.01251,
+    "median_shift": -4
+   },
+   {
+    "decile": 8,
+    "n": 145,
+    "median_price": 334900,
+    "median_tax": 3784,
+    "median_etr": 0.0113,
+    "median_shift": -401
+   },
+   {
+    "decile": 9,
+    "n": 145,
+    "median_price": 382500,
+    "median_tax": 4724,
+    "median_etr": 0.01239,
+    "median_shift": -51
+   },
+   {
+    "decile": 10,
+    "n": 146,
+    "median_price": 530000,
+    "median_tax": 6230,
+    "median_etr": 0.0114,
+    "median_shift": -694
+   }
+  ]
+ }
+}

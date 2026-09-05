@@ -61,8 +61,9 @@ error, set Settings → Pages → Source = "GitHub Actions" once and re-run.
   checkout) for browser automation only. It does NOT fork the Playwright logic.
 - **2025 study run (V12 live).** 2026-09-05: the parcel service was renamed
   with the V12 release (see Assessments below); after the config fix the 2025
-  study ran with the vintage gate at 100%. Its outputs await Rowan's review
-  per the Publishing workflow — the widget keeps 2024 live until that push.
+  study ran with the vintage gate at 100%. Rowan reviewed and pushed the
+  outputs the same day (the sign-off per the Publishing workflow); the widget
+  now defaults to 2025 with the 2024 comparison.
 
 ## The two sources (and why)
 
