@@ -1,0 +1,19 @@
+name: tests
+
+# Pure-function tests plus the output/ contract tests (index ↔ feed files,
+# widget schema, aggregate-only privacy scan). No network.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+      - run: pip install pytest
+      - run: python -m pytest tests -q

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { Component, useEffect, useState } from "react";
 import Masthead from "./components/Masthead.jsx";
 import { HowItWorks, Definitions } from "./components/Explainer.jsx";
 import DecileChart from "./components/DecileChart.jsx";
@@ -11,9 +11,13 @@ import { pctVsPar, fixed, signedFixed, range } from "./lib/format.js";
 const isFlag = (reading) => !reading.startsWith("within");
 
 const BASE = import.meta.env.BASE_URL;
+// Oldest feed contract this build understands (analysis/study.py FEED_SCHEMA).
+const MIN_SCHEMA = 2;
 
+// no-cache = always revalidate with the server (ETag), so a fresh deploy's
+// index.json is picked up immediately instead of after Pages' cache window.
 async function getJSON(path, { optional = false } = {}) {
-  const r = await fetch(`${BASE}${path}`);
+  const r = await fetch(`${BASE}${path}`, { cache: "no-cache" });
   if (!r.ok) {
     if (optional) return null;
     throw new Error(`${path}: ${r.status}`);
@@ -21,14 +25,38 @@ async function getJSON(path, { optional = false } = {}) {
   return r.json();
 }
 
-// The feed is generated code, but a truncated or half-written file must fail
-// with a readable message rather than a blank page or a stack trace.
+// The feed is generated code, but a truncated, half-written, or out-of-date
+// file must fail with a readable message rather than a blank page.
 function validate(f) {
   const need = ["study_year", "county", "reference", "sample", "municipalities", "pooled", "deciles"];
   const missing = need.filter((k) => f?.[k] == null);
   if (missing.length) throw new Error(`findings feed is missing: ${missing.join(", ")}`);
   if (!Array.isArray(f.deciles) || f.deciles.length < 2) throw new Error("findings feed has no deciles");
+  if ((f.schema ?? 0) < MIN_SCHEMA) throw new Error(`findings feed schema ${f.schema ?? "none"} is older than ${MIN_SCHEMA}`);
   return f;
+}
+
+// A render-time crash (an unexpected null deep in a feed) would otherwise
+// unmount the whole page. Catch it and show the same friendly message.
+class ErrorBoundary extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { error: null };
+  }
+  static getDerivedStateFromError(error) {
+    return { error };
+  }
+  render() {
+    if (this.state.error) {
+      return (
+        <p className="empty">
+          Couldn’t display the study right now.{" "}
+          <span className="empty-detail">({String(this.state.error.message || this.state.error)})</span>
+        </p>
+      );
+    }
+    return this.props.children;
+  }
 }
 
 function Shell({ children }) {
@@ -66,10 +94,13 @@ export default function App() {
     setLoading(true);
     const years = index.years;
     const prevYear = years[years.indexOf(year) - 1];
+    // The prior year and the cross-check are enrichments: if either is missing
+    // or malformed the page still renders, without that section.
+    const soft = (p) => p.catch(() => null);
     Promise.all([
       getJSON(`findings-${year}.json`).then(validate),
-      prevYear ? getJSON(`findings-${prevYear}.json`, { optional: true }) : null,
-      getJSON(`crosscheck-${year}.json`, { optional: true }),
+      prevYear ? soft(getJSON(`findings-${prevYear}.json`, { optional: true }).then((f) => f && validate(f))) : null,
+      soft(getJSON(`crosscheck-${year}.json`, { optional: true }).then((c) => (c?.municipalities ? c : null))),
     ])
       .then(([findings, previous, crosscheck]) => {
         if (!alive) return;
@@ -118,6 +149,7 @@ export default function App() {
 
   return (
     <Shell>
+      <ErrorBoundary>
       <div className={loading ? "study is-loading" : "study"} aria-busy={loading}>
         <header className="masthead">
           <div className="masthead-top">
@@ -270,6 +302,7 @@ export default function App() {
           Review civic-data tool.
         </footer>
       </div>
+      </ErrorBoundary>
     </Shell>
   );
 }

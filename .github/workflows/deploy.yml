@@ -28,6 +28,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+      # Gate: the committed feeds must be self-consistent and aggregate-only
+      # BEFORE anything is published (index ↔ files, widget schema, privacy).
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+      - run: pip install pytest
+      - name: Feed contract + privacy gate
+        run: python -m pytest tests/test_outputs.py -q
       - uses: actions/setup-node@v6
         with:
           node-version: "20"

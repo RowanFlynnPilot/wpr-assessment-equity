@@ -2,6 +2,7 @@
 one place, with the reason it exists.
 """
 
+import os
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -9,7 +10,11 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 # ---- Scope -------------------------------------------------------------------
 COUNTY = "Marathon"                 # RETR county name (TAP filter value)
 COUNTY_UPPER = "MARATHON"           # parcel layer CONAME value
-STUDY_YEAR = 2025                   # sales year AND required assessment roll year
+# Sales year AND required assessment roll year. The default is the current
+# study; regenerate an earlier year with the env var instead of editing this
+# file (PowerShell: `$env:WPR_STUDY_YEAR=2024; python -m analysis.study`), so
+# a temporary flip can never be committed by accident.
+STUDY_YEAR = int(os.environ.get("WPR_STUDY_YEAR", "2025"))
 
 # ---- Sibling repo (browser automation lives there; we do not fork it) ---------
 SIBLING_SCRAPER_REPO = REPO_ROOT.parent / "wpr-property-transactions"

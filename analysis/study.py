@@ -9,6 +9,7 @@ and price decile. No names, addresses, or parcel numbers.
 """
 
 import json
+import re
 import statistics
 from collections import defaultdict
 from datetime import date
@@ -16,6 +17,11 @@ from datetime import date
 from . import config, parcels, ratios
 from .join import join
 from .retr import load_study_population
+
+
+# Feed contract version. Bump when a field the widget relies on changes shape;
+# the widget refuses feeds older than the version it was built against.
+FEED_SCHEMA = 2
 
 
 def _records_by_muni(matches) -> dict[str, list[tuple[int, int, float]]]:
@@ -112,6 +118,10 @@ def compute() -> dict:
     # Bottom-decile deviation with sampling uncertainty: resample sales jointly
     # with their municipality, re-cut deciles, take decile 1's median.
     tagged = list(zip(pooled_pairs, pooled_munis))
+    if len(tagged) < config.N_DECILES * 5:
+        raise RuntimeError(
+            f"only {len(tagged)} pooled sales — too few to cut {config.N_DECILES} "
+            f"deciles; the sample construction upstream is broken")
     bottom_ci = ratios.bootstrap_ci(
         tagged,
         lambda rs: ratios.decile_table([r[0] for r in rs], muni_median,
@@ -143,6 +153,7 @@ def compute() -> dict:
     }
 
     return {
+        "schema": FEED_SCHEMA,
         "generated": date.today().isoformat(),
         "county": config.COUNTY,
         "study_year": config.STUDY_YEAR,
@@ -297,7 +308,9 @@ def write_index() -> dict:
     """output/index.json lists every study year present (from the per-year
     feed files) and the latest — the widget's entry point."""
     years = sorted(
-        int(p.stem.split("-")[1]) for p in config.OUTPUT_DIR.glob("findings-*.json")
+        int(m.group(1))
+        for p in config.OUTPUT_DIR.glob("findings-*.json")
+        if (m := re.fullmatch(r"findings-(\d{4})\.json", p.name))
     )
     if not years:
         raise RuntimeError("no findings-<year>.json in output/ — nothing to index")

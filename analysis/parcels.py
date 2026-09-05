@@ -13,6 +13,8 @@ to compute vintage-mismatched ratios.
 
 import csv
 import json
+import time
+import urllib.error
 import urllib.parse
 import urllib.request
 
@@ -20,6 +22,38 @@ from . import config
 from .join import normalize_parcel_id
 
 _COLUMNS = config.PARCEL_FIELDS.split(",")
+_PAGE_ATTEMPTS = 3      # transient-network retry per page, same pattern as the
+                        # sales backfill; an endpoint ERROR is never retried
+
+
+def _page(offset: int) -> dict:
+    q = urllib.parse.urlencode({
+        "where": f"CONAME='{config.COUNTY_UPPER}'",
+        "outFields": config.PARCEL_FIELDS,
+        "returnGeometry": "false",
+        "resultOffset": offset,
+        "resultRecordCount": config.PARCEL_PAGE_SIZE,
+        "f": "json",
+    })
+    for attempt in range(1, _PAGE_ATTEMPTS + 1):
+        try:
+            with urllib.request.urlopen(f"{config.PARCEL_ENDPOINT}?{q}", timeout=120) as r:
+                d = json.load(r)
+            break
+        except (urllib.error.URLError, TimeoutError, json.JSONDecodeError) as exc:
+            if attempt == _PAGE_ATTEMPTS:
+                raise
+            print(f"  offset {offset} attempt {attempt} failed ({exc}); retrying")
+            time.sleep(5)
+    if "error" in d:
+        # ArcGIS reports errors as HTTP 200 + an error object. "Invalid URL"
+        # means the service was renamed with a release (V12 did this) — list
+        # the org's services directory and update PARCEL_ENDPOINT.
+        raise RuntimeError(
+            f"parcel endpoint error at offset {offset}: {d['error']} — if the "
+            f"message is 'Invalid URL', the service was likely renamed; see "
+            f"CLAUDE.md (Assessments) for the recovery path")
+    return d
 
 
 def fetch() -> None:
@@ -29,18 +63,7 @@ def fetch() -> None:
         w = csv.DictWriter(f, fieldnames=_COLUMNS)
         w.writeheader()
         while True:
-            q = urllib.parse.urlencode({
-                "where": f"CONAME='{config.COUNTY_UPPER}'",
-                "outFields": config.PARCEL_FIELDS,
-                "returnGeometry": "false",
-                "resultOffset": offset,
-                "resultRecordCount": config.PARCEL_PAGE_SIZE,
-                "f": "json",
-            })
-            with urllib.request.urlopen(f"{config.PARCEL_ENDPOINT}?{q}", timeout=120) as r:
-                d = json.load(r)
-            if "error" in d:
-                raise RuntimeError(f"parcel endpoint error at offset {offset}: {d['error']}")
+            d = _page(offset)
             feats = d.get("features", [])
             if not feats:
                 break
@@ -79,10 +102,11 @@ def load() -> dict[str, dict]:
         raise RuntimeError(
             f"VINTAGE GATE: only {share:.1%} of residential parcels carry the "
             f"{config.STUDY_YEAR} tax roll (need >= {config.VINTAGE_MIN_SHARE:.0%}). "
-            f"The endpoint is still serving an older release (V11 = 2024 roll; "
-            f"V12 with the 2025 roll was scheduled for 2026-06-30). Re-run "
-            f"`python -m analysis.parcels` once V12 is live. Do NOT bypass this: "
-            f"ratios against the wrong assessment year are noise, not findings.")
+            f"The endpoint is serving a different release than this study year "
+            f"needs (the statewide map publishes each roll roughly a year later, "
+            f"under a renamed service). Re-run `python -m analysis.parcels` once "
+            f"the matching release is live. Do NOT bypass this: ratios against "
+            f"the wrong assessment year are noise, not findings.")
     print(f"Parcel index: {len(index)} parcels, vintage {config.STUDY_YEAR} "
           f"({share:.1%} of residential on-vintage)")
     return index

@@ -233,7 +233,15 @@ only during backfill.
 - Cross-check (network; after the study): `python -m analysis.crosscheck` →
   prints the DOR comparison and writes `output/crosscheck-<year>.json`
 - Tests: `python -m pytest tests/ -q` (pure-function tests; no network)
+- Regenerating an earlier year: set the env var instead of editing config —
+  `$env:WPR_STUDY_YEAR=2024; python -m analysis.study` (then
+  `Remove-Item Env:WPR_STUDY_YEAR`). Never commit a changed STUDY_YEAR default
+  unless the study window itself moved.
 - Widget: `cd frontend ; npm install ; npm run dev` (Vite serves at
-  `/wpr-assessment-equity/`; `vite.config.js` publicDir points at `output/` so
-  the feed is served without a copy step). `npm run build` → `frontend/dist/`
-  (gitignored; no deploy workflow — publishing is an editorial decision).
+  `/wpr-assessment-equity/`; a small plugin in `vite.config.js` serves and
+  copies ONLY the JSON feeds from `output/` — the `.md` memos are internal
+  and never reach the site). `npm run build` → `frontend/dist/` (gitignored);
+  `deploy.yml` publishes on push.
+- CI: `test.yml` runs pytest on every push/PR; `deploy.yml` runs the
+  `tests/test_outputs.py` gate (index ↔ feed files, widget schema, privacy
+  scan of every public JSON) before building, so a bad commit cannot publish.
